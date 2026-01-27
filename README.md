@@ -1,6 +1,6 @@
 # GeoBlock Search Results
 
-A powerful Greasemonkey/Tampermonkey userscript that filters search results by country of origin using multiple detection methods including TLD parsing, geolocation APIs, DNS nameserver analysis, and WHOIS lookups.
+**Version 4.6** - A powerful, secure Greasemonkey/Tampermonkey userscript that filters search results by country of origin using multiple detection methods including TLD parsing, geolocation APIs, DNS nameserver analysis, and WHOIS lookups.
 
 ## ✨ Key Features
 
@@ -11,28 +11,48 @@ A powerful Greasemonkey/Tampermonkey userscript that filters search results by c
 - ⚡ **Rate Limiting** - Queue-based API requests to avoid throttling
 - 🎯 **60+ Known Domains** - Instant detection for popular sites (GitHub, StackOverflow, BBC, etc.)
 - 🌐 **Multi-Engine Support** - Works on Google, DuckDuckGo, Bing, Yahoo, Brave, and more
+- 🔒 **Security Hardened** - HTTPS APIs, request timeouts, input validation, sanitization
+- 🐛 **Advanced Debugging** - Console analysis functions for troubleshooting failed lookups
+- 🔔 **Privacy Notice** - First-run consent dialog with API disclosure
 
 ## 🔧 Detection Methods
 
-The script uses a sophisticated 4-tier fallback system:
+The script uses a sophisticated 4-tier fallback system with security hardening:
 
 1. **TLD Parsing** (Local, Instant)
    - Multi-level TLD support (.com.ar, .co.uk, .gov.cn, etc.)
    - 60+ hardcoded popular domains for instant recognition
+   - Zero network requests for known domains
 
-2. **Geolocation API** (ip-api.com)
-   - 45 requests/minute limit
+2. **Geolocation API** (ipapi.co - HTTPS)
+   - 1,000 requests/day limit (free tier)
+   - 5-second timeout protection
    - 24-hour cache for performance
-   - Queue-based rate limiting
+   - Queue-based rate limiting with 1.5s delay
+   - Response validation and sanitization
 
 3. **DNS Nameserver Lookup** (Cloudflare DNS-over-HTTPS)
    - Analyzes nameserver patterns (chinanet→China, yandex→Russia, etc.)
    - Fast and reliable for major hosting providers
+   - 5-second timeout protection
+   - Secure HTTPS connection
 
-4. **WHOIS Lookup** (whoisjsonapi.com)
+4. **WHOIS Lookup** (whoisjsonapi.com - HTTPS)
    - Fallback for domains without clear TLD/DNS indicators
    - 7-day cache to minimize API usage
    - 500 requests/day limit
+   - Input validation to prevent injection attacks
+   - 5-second timeout protection
+
+### 🔒 Security Features (v4.0+)
+
+- ✅ **HTTPS Only** - All API calls use encrypted connections
+- ✅ **Request Timeouts** - 5-second timeout on all external requests to prevent hanging
+- ✅ **Input Validation** - Regex validation on all domain names and user input
+- ✅ **Output Sanitization** - LocalStorage keys sanitized to prevent injection
+- ✅ **Response Validation** - Type checking, length limits, HTML detection
+- ✅ **Privacy Notice** - First-run consent dialog explaining data usage
+- ✅ **CORS Protection** - Filters out search engine redirect URLs to prevent errors
 
 ## 🌐 Supported Search Engines
 
@@ -47,95 +67,6 @@ The script uses a sophisticated 4-tier fallback system:
 | **Startpage** | ✅ Fully Supported |
 | **Yandex** | ✅ Fully Supported |
 | **Qwant** | ✅ Fully Supported |
-
-## 🎨 User Interface Features
-
-- 🏴‍☠️ **Clickable Flag Interface** - Click any flag next to search results to toggle blocking
-- ⚙️ **Interactive Configuration** - Modern modal dialog with all countries and status indicators
-- 💾 **Persistent Settings** - Preferences saved in browser localStorage
-- 🎯 **Real-Time Filtering** - Automatically hides results from blocked countries as they load
-- 🎨 **Clean UI** - Compact blocked results with minimal space usage
-- ⚡ **Dynamic Updates** - Works with dynamically loaded search results (infinite scroll)
-- 🚫 **Visual Feedback** - Blocked results collapse to show only flag + "Blocked" indicator
-- 🔧 **Custom Domain Blocking** - Add any domain to your personal blocklist
-
-## 🗺️ Supported Countries (55)
-
-The script includes 55 countries with comprehensive multi-level TLD support:
-
-<details>
-<summary><b>View Full Country List (Click to expand)</b></summary>
-
-| Country | Primary TLD | Additional TLDs | Flag |
-|---------|-------------|-----------------|------|
-| Argentina | .ar | .com.ar, .org.ar, .net.ar, .gov.ar, .edu.ar, .mil.ar | 🇦🇷 |
-| Australia | .au | .com.au, .org.au, .net.au, .edu.au, .gov.au, .asn.au, .id.au | 🇦🇺 |
-| Austria | .at | .co.at, .or.at, .ac.at, .gv.at | 🇦🇹 |
-| Bangladesh | .bd | .com.bd, .org.bd, .net.bd, .gov.bd, .edu.bd, .ac.bd | 🇧🇩 |
-| Belgium | .be | .com.be, .org.be, .net.be, .ac.be, .gov.be | 🇧🇪 |
-| Brazil | .br | .com.br, .org.br, .net.br, .gov.br, .edu.br, .mil.br | 🇧🇷 |
-| Canada | .ca | .com.ca, .org.ca, .net.ca, .gc.ca | 🇨🇦 |
-| China | .cn | .com.cn, .org.cn, .net.cn, .gov.cn, .edu.cn, .ac.cn | 🇨🇳 |
-| Czech Republic | .cz | .co.cz | 🇨🇿 |
-| Denmark | .dk | .co.dk | 🇩🇰 |
-| Egypt | .eg | .com.eg, .org.eg, .net.eg, .gov.eg, .edu.eg | 🇪🇬 |
-| Finland | .fi | .com.fi, .org.fi, .net.fi, .gov.fi, .edu.fi | 🇫🇮 |
-| France | .fr | .com.fr, .org.fr, .net.fr, .gouv.fr, .asso.fr | 🇫🇷 |
-| Germany | .de | .com.de, .org.de, .net.de | 🇩🇪 |
-| Greece | .gr | .com.gr, .org.gr, .net.gr, .gov.gr, .edu.gr | 🇬🇷 |
-| Hong Kong | .hk | .com.hk, .org.hk, .net.hk, .gov.hk, .edu.hk | 🇭🇰 |
-| Hungary | .hu | .co.hu, .org.hu, .gov.hu, .edu.hu | 🇭🇺 |
-| India | .in | .co.in, .org.in, .net.in, .gov.in, .edu.in, .ac.in, .nic.in | 🇮🇳 |
-| Indonesia | .id | .co.id, .or.id, .net.id, .go.id, .ac.id, .web.id | 🇮🇩 |
-| Iran | .ir | .com.ir, .org.ir, .net.ir, .gov.ir, .ac.ir, .co.ir | 🇮🇷 |
-| Ireland | .ie | .com.ie, .org.ie, .net.ie, .gov.ie | 🇮🇪 |
-| Israel | .il | .co.il, .org.il, .net.il, .gov.il, .ac.il | 🇮🇱 |
-| Italy | .it | .com.it, .org.it, .net.it, .gov.it, .edu.it | 🇮🇹 |
-| Japan | .jp | .co.jp, .or.jp, .ne.jp, .go.jp, .ac.jp, .ed.jp, .lg.jp | 🇯🇵 |
-| Kenya | .ke | .co.ke, .or.ke, .ne.ke, .go.ke, .ac.ke | 🇰🇪 |
-| Malaysia | .my | .com.my, .org.my, .net.my, .gov.my, .edu.my | 🇲🇾 |
-| Mexico | .mx | .com.mx, .org.mx, .net.mx, .gob.mx, .edu.mx | 🇲🇽 |
-| Netherlands | .nl | .com.nl, .org.nl, .net.nl, .co.nl | 🇳🇱 |
-| New Zealand | .nz | .co.nz, .org.nz, .net.nz, .govt.nz, .ac.nz | 🇳🇿 |
-| Nigeria | .ng | .com.ng, .org.ng, .net.ng, .gov.ng, .edu.ng | 🇳🇬 |
-| North Korea | .kp | .com.kp, .org.kp, .net.kp, .gov.kp, .edu.kp | 🇰🇵 |
-| Norway | .no | .co.no, .org.no, .net.no, .gov.no | 🇳🇴 |
-| Pakistan | .pk | .com.pk, .org.pk, .net.pk, .gov.pk, .edu.pk | 🇵🇰 |
-| Philippines | .ph | .com.ph, .org.ph, .net.ph, .gov.ph, .edu.ph | 🇵🇭 |
-| Poland | .pl | .com.pl, .org.pl, .net.pl, .gov.pl, .edu.pl, .co.pl | 🇵🇱 |
-| Portugal | .pt | .com.pt, .org.pt, .net.pt, .gov.pt, .edu.pt | 🇵🇹 |
-| Romania | .ro | .com.ro, .org.ro, .net.ro, .gov.ro, .edu.ro | 🇷🇴 |
-| Russia | .ru | .com.ru, .org.ru, .net.ru, .gov.ru, .edu.ru, .mil.ru | 🇷🇺 |
-| Saudi Arabia | .sa | .com.sa, .org.sa, .net.sa, .gov.sa, .edu.sa | 🇸🇦 |
-| Singapore | .sg | .com.sg, .org.sg, .net.sg, .gov.sg, .edu.sg | 🇸🇬 |
-| South Africa | .za | .co.za, .org.za, .net.za, .gov.za, .ac.za | 🇿🇦 |
-| South Korea | .kr | .co.kr, .or.kr, .ne.kr, .go.kr, .ac.kr, .re.kr, .pe.kr | 🇰🇷 |
-| Spain | .es | .com.es, .org.es, .net.es, .gob.es, .edu.es | 🇪🇸 |
-| Sweden | .se | .com.se, .org.se, .net.se | 🇸🇪 |
-| Switzerland | .ch | .com.ch, .org.ch, .net.ch, .gov.ch | 🇨🇭 |
-| Taiwan | .tw | .com.tw, .org.tw, .net.tw, .gov.tw, .edu.tw | 🇹🇼 |
-| Thailand | .th | .co.th, .or.th, .net.th, .go.th, .ac.th | 🇹🇭 |
-| Turkey | .tr | .com.tr, .org.tr, .net.tr, .gov.tr, .edu.tr, .biz.tr | 🇹🇷 |
-| Ukraine | .ua | .com.ua, .org.ua, .net.ua, .gov.ua, .edu.ua | 🇺🇦 |
-| United Arab Emirates | .ae | .co.ae, .org.ae, .net.ae, .gov.ae, .ac.ae | 🇦🇪 |
-| United Kingdom | .uk | .co.uk, .ac.uk, .gov.uk, .org.uk, .net.uk, .sch.uk, .nhs.uk, .police.uk | 🇬🇧 |
-| United States | .us | .com.us, .org.us, .net.us, .edu, .gov, .mil | 🇺🇸 |
-| Vietnam | .vn | .com.vn, .org.vn, .net.vn, .gov.vn, .edu.vn, .ac.vn | 🇻🇳 |
-
-</details>
-
-### 🌟 60+ Known Domains (Instant Detection)
-
-Popular domains are recognized instantly without API calls:
-- **Tech**: GitHub, StackOverflow, npm, PyPI, RubyGems, Crates.io
-- **Learning**: W3Schools, freeCodeCamp, Codecademy, Coursera, Khan Academy, Udemy
-- **News**: BBC, The Guardian
-- **Social**: YouTube, Facebook, Twitter, Reddit, LinkedIn, Instagram
-- **Chinese**: Baidu, QQ, Taobao, Tmall
-- **Russian**: Yandex, Mail.ru, VK
-- **Korean**: Naver, Daum
-- **Japanese**: Rakuten, Yahoo Japan
-- And many more...
 
 ## Installation
 
@@ -176,62 +107,293 @@ First, you need a userscript manager extension:
 3. The installation dialog should appear automatically
 4. Click **"Install"**
 
-## Usage on DuckDuckGo
+## 🐛 Debugging & Analysis (v4.4+)
+
+GeoBlock includes powerful console analysis functions to help troubleshoot lookup failures and optimize performance.
+
+### Console Commands
+
+Open the browser console (F12) after performing a search and run:
+
+```javascript
+// View all failed lookups in a formatted table
+geoBlockFailedLookups()
+
+// Get detailed analysis with error breakdown
+geoBlockAnalyzeFailed()
+
+// Export failed domains as CSV (auto-copies to clipboard)
+geoBlockExportFailed()
+
+// Get list of domains needing manual mapping
+geoBlockGetUnmappedDomains()
+
+// Test geolocation lookup for a specific domain
+await geoBlockTestDomain('example.com')
+
+// View cache statistics (fresh vs stale entries)
+geoBlockCacheStats()
+
+// Clear the failed lookups log
+geoBlockClearFailed()
+```
+
+### Example Output
+
+After running `geoBlockAnalyzeFailed()`:
+
+```
+📈 Failed Lookup Analysis
+Total failed domains: 8
+
+🔸 Domains: weathergeeks.org, vedantu.com, wikiwand.com,
+  cambridge.org, biolecta.com, sunlight.net, britannica.com
+
+🔸 Error Types: {
+  "TimeoutError": 3,
+  "AbortError": 2,
+  "NetworkError": 3
+}
+
+🔸 HTTP Status Codes: {
+  "429": 2,  // Rate limited
+  "503": 1   // Service unavailable
+}
+```
+
+### Troubleshooting with Console Functions
+
+1. **Rate Limiting Issues** - Use `geoBlockAnalyzeFailed()` to see if status code 429 appears frequently
+2. **Network Problems** - Check error types for timeout/network issues
+3. **Add Manual Mappings** - Use `geoBlockGetUnmappedDomains()` to get copy-paste code for your knownDomains
+4. **Cache Performance** - Use `geoBlockCacheStats()` to see hit rates and identify stale entries
+5. **Export for Analysis** - Use `geoBlockExportFailed()` to get CSV data for spreadsheet analysis
+
+## Usage
+
+### First Run - Privacy Notice
+
+On your first search after installation, you'll see a privacy notice dialog:
+
+> **GeoBlock Privacy Notice:**
+> 
+> This extension sends domain names from search results to external geolocation APIs (ipapi.co, cloudflare-dns.com, whoisjsonapi.com) to determine their country of origin. No personal data is sent.
+> 
+> Do you want to continue using GeoBlock?
+
+- Click **OK** to accept and activate the script
+- Click **Cancel** to decline (the script will not run)
+- This dialog only appears once; your choice is saved in localStorage
 
 ### Basic Usage
-1. **Go to [duckduckgo.com](https://duckduckgo.com)**
+
+1. **Visit any supported search engine** (Google, DuckDuckGo, Bing, etc.)
 2. **Perform a search** as you normally would
-3. **Look for the "🌍 GeoBlock" button** near the top of the page
-4. **Flags will appear** next to each search result showing the country of origin
+3. **Look for the "🌍 GeoBlock" button** near the top of search results
+4. **Flags will appear** next to each result showing the country of origin
 
 ### Toggle Country Blocking
+
 There are **two ways** to block/unblock countries:
 
 1. **Click any flag next to a search result** - Instantly toggles blocking for that country
 2. **Click the "🌍 GeoBlock" button** - Opens configuration modal with all countries
 
 ### Configuration Modal Features
+
 - Click **country flags** in the modal to toggle blocking
 - Click **entire country rows** to toggle blocking
 - See **real-time status** (✓ Blocked / ○ Allowed)
 - **Manage custom domains** via the "Manage Custom Domains" button
+- Search for countries using the search box
 
 ### Blocked Results Behavior
-When a result is blocked on DuckDuckGo:
+
+When a result is blocked:
 - ✅ **Content is hidden** - Only shows flag and "🚫 Blocked" indicator
 - ✅ **Minimal space** - Collapses to compact size
-- ✅ **Flag remains clickable** - Click to unblock the country
+- ✅ **Flag remains clickable** - Click to unblock the country instantly
 - ✅ **Visual feedback** - Shows notification when toggling
+- ✅ **Persistent** - Settings saved automatically in localStorage
 
-## Testing on Other Search Engines
+## 🧪 Testing & Verification
 
-If you want to test the script on other search engines:
+### Verify Script is Running
 
-1. **Open browser console (F12)** before testing
-2. Visit the search engine (e.g., Google, Bing)
+1. **Open browser console (F12)** before searching
+2. Visit any supported search engine
 3. Perform a search
-4. Check console for messages:
-   - ✅ `"GeoBlock initializing..."` - Script loaded
-   - ✅ `"Found X results with selector: ..."` - Results detected
-   - ✅ `"Country found: ..."` - Country detection working
-   - ❌ `"No URL found for result"` - Selector issues
-   - ❌ `"No country found for domain: ..."` - Detection issues
+4. Look for console message: `✅ GeoBlock Search Results v4.6 loaded`
+
+### Check Detection Status
+
+The console will show detection progress:
+- ✅ `"✅ Country found: [Country] for [domain]"` - Successful detection
+- ✅ `"Found X results with selector: ..."` - Results detected correctly
+- ⚠️ `"❌ Failed to get country for [domain] (attempt X/3)"` - Lookup failed (will retry)
+- ❌ `"No URL found for result"` - Selector issues (report as bug)
+
+### Test Specific Domains
+
+Use the console test function to verify geolocation:
+
+```javascript
+// Test a single domain
+await geoBlockTestDomain('github.com')
+// Output: 🔍 Testing: github.com
+//         Result: United States
+
+// Test multiple domains
+await geoBlockTestDomain('bbc.co.uk')
+await geoBlockTestDomain('yandex.ru')
+await geoBlockTestDomain('taobao.com')
+```
+
+### Common Issues
+
+**No flags appearing:**
+1. Check console for `✅ GeoBlock Search Results v4.6 loaded`
+2. Verify privacy notice was accepted (check localStorage: `geoblock_privacy_notice`)
+3. Check for JavaScript errors in console
+4. Try `geoBlockFailedLookups()` to see which domains failed
+
+**CORS Errors:**
+- Should be fixed in v4.6 (filters out search engine redirect URLs)
+- If you still see them, report with the domain name
+
+**Rate Limiting (429 errors):**
+- ipapi.co has 1000 requests/day limit
+- Use `geoBlockAnalyzeFailed()` to check status codes
+- Consider adding frequently-accessed domains to `knownDomains` array
 
 ## Contributing to Other Search Engine Support
 
-Want to help add support for other search engines? You'll need to:
+Want to help add support for additional search engines? You'll need to update three functions:
 
-1. **Update the `getResultSelectors()` function** with correct CSS selectors
-2. **Update the `getDisplayURL()` function** to extract URLs from that engine's HTML
-3. **Update the `addFlagIndicator()` function** for proper flag placement
-4. **Test thoroughly** with various search queries
+### 1. Update `getResultSelectors()`
 
-Example for a new search engine:
+Add CSS selectors for the new search engine's result containers:
+
 ```javascript
-if (hostname.includes('newengine.com')) {
+} else if (hostname.includes('newengine.com')) {
     return [
-        '.result-selector-1',
-        '.result-selector-2',
-        '[data-result]'
+        '.result-selector-1',      // Primary result container
+        '.result-selector-2',      // Alternative selector
+        '[data-result]'            // Fallback attribute selector
     ];
 }
+```
+
+### 2. Update `getDisplayURL()`
+
+Add selectors to extract the display URL (visible URL text, not redirect):
+
+```javascript
+const selectors = [
+    'cite',                        // Common for Google
+    '.result__url',                // Common pattern
+    '.your-engine-url-class',      // Add engine-specific class
+    // ...
+];
+```
+
+### 3. Update `addFlagIndicator()`
+
+Specify where to insert the flag in the result layout:
+
+```javascript
+} else if (hostname.includes('newengine.com')) {
+    // Find the title element
+    const title = result.querySelector('.result-title');
+    if (title && title.parentNode) {
+        title.parentNode.insertBefore(flagElement, title);
+    }
+}
+```
+
+### Testing Your Changes
+
+1. Enable verbose console logging in browser DevTools
+2. Search for queries with known country domains (.co.uk, .de, .ru, etc.)
+3. Verify flags appear in correct positions
+4. Test blocking functionality
+5. Check for console errors
+6. Submit a pull request with your changes!
+
+## 📋 Version History
+
+### v4.6 (January 2026)
+- **Fixed:** DuckDuckGo CORS errors by filtering search engine redirect URLs
+- **Improved:** Enhanced domain extraction to skip tracking/redirect domains
+- **Security:** Additional domain validation to prevent redirect lookups
+
+### v4.5 (January 2026)
+- **Added:** 7 comprehensive console analysis functions
+- **Added:** `geoBlockFailedLookups()` - View failed lookups in formatted table
+- **Added:** `geoBlockExportFailed()` - Export failures as CSV with clipboard copy
+- **Added:** `geoBlockAnalyzeFailed()` - Error breakdown and statistics
+- **Added:** `geoBlockGetUnmappedDomains()` - Generate manual mapping code
+- **Added:** `geoBlockCacheStats()` - View cache performance metrics
+- **Added:** `geoBlockTestDomain()` - Test individual domain lookups
+- **Added:** Detailed usage documentation in script comments
+- **Fixed:** Console function accessibility issues with proper window scope
+
+### v4.4 (January 2026)
+- **Added:** Failed lookup tracking with FAILED_LOOKUPS array (max 50 entries)
+- **Added:** Detailed attempt logging in fetchDomainCountry()
+- **Added:** Console emoji indicators (✅/❌) for lookup status
+- **Added:** window.geoBlockDebug object for basic debugging
+- **Improved:** Error tracking with timestamps and attempt counts
+
+### v4.3 (January 2026)
+- **Changed:** Migrated from ip-api.com to ipapi.co (1000 req/day)
+- **Fixed:** API now accepts domain names directly (no IP conversion needed)
+- **Improved:** Simplified geolocation API calls
+- **Updated:** Response parsing for ipapi.co JSON format
+
+### v4.0-4.2 (January 2026)
+- **Security:** Migrated all APIs to HTTPS
+- **Security:** Added 5-second timeout protection on all fetch requests
+- **Security:** Input validation with regex patterns
+- **Security:** Output sanitization for localStorage keys
+- **Security:** Response validation (type checking, length limits, HTML detection)
+- **Added:** Privacy notice dialog on first run
+- **Added:** User consent tracking in localStorage
+- **Added:** @connect directives for CORS compatibility
+
+### v3.x (Earlier)
+- Multi-engine support (Google, Bing, Yahoo, Brave, Ecosia, etc.)
+- 4-tier fallback detection system
+- Smart caching (24h geolocation, 7d WHOIS)
+- Rate limiting with queue system
+- 55 countries with multi-level TLD support
+- 60+ known domains for instant detection
+- Interactive configuration modal
+- Custom domain blocking
+
+## 📄 License
+
+This project is open source and available for personal and educational use.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. Areas that need help:
+
+- Additional search engine support
+- More known domain mappings
+- UI/UX improvements
+- Bug reports and fixes
+- Documentation improvements
+
+## ⚠️ Disclaimer
+
+This script uses third-party APIs with rate limits:
+- **ipapi.co**: 1,000 requests/day (free tier)
+- **whoisjsonapi.com**: 500 requests/day (with API key)
+- **Cloudflare DNS**: Public service, reasonable use expected
+
+Excessive use may result in temporary rate limiting. The script includes caching and rate limiting to minimize API usage.
+
+---
+
+**Made with ❤️ for privacy-conscious searchers**

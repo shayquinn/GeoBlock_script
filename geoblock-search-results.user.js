@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GeoBlock Search Results
 // @namespace    http://tampermonkey.net/
-// @version      4.2
+// @version      4.6
 // @description  Block search results from specific countries with geolocation checking
 // @author       You
 // @match        https://www.google.com/search*
@@ -26,12 +26,18 @@
 // @match        https://yandex.com/search/*
 // @match        https://www.qwant.com/*
 // @icon         data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACsUlEQVQ4T42TSWxNYRTHf9+99937+gaUBDWkNTQ1hUYNFYKFpIawQIghkSCREBsxJYYNXViwYmPcGGJMRIhgo6YQDeKFqJopQvva9/qG++7wyf1eTJHgvzvT//zP+c4nyg8ktyHYIpAWQDQEeRc8GVh/QhfFmETYSOpF+cFkXhfSWjHcYvkIi95RHduTHH1qs/NuThXFQrBmVJg5g0zKohquD8+SHocSti02NXTKqf1DTK8wOd9sc+m1w6Iqkyn9Qow53qHITs2K09zucf29S6ogGdZdZ3V1GFMDkbI9GTc1Tj6z2XwzqzpuHV/CkiEWo4+1YwiIm4Jgov3TYsw+n1Y5uyZFWFBlIbKOL4Mk24MXHZ4qGFyqs/12llNNBZX8vaC2zGDK6ZSyd0+OMLfSQkgp5Zkmm/p7OSVN1yDx1SNp/9xiiQGNi7txq8XhTdqnpqfB0B46d1qcIsHGhgynn//sVtFF43XK/2FP7WdwpC7OnsYciVZXNQpGDKAIVl3r5MobRzkmlBkcnRFj/oU0D754yre+Jsya6hKWXU7T8MFVvrXVFutqIkWC3fez7H1kq8DqkRYbxkbYeivDtbcO8ytNhvcwmDHApO5sB03tRWVLh5jsmBgtEmQdyYHHeb7kfFaOCFPRVWfV1U7Wjwnj+MFxCcq76NSeaOdzVqrnO1wXY2KfEOJsU17OHmQS0gQFTyIE6iU+ZXyetHmce15ge22EXlGNp60uLRlfKeod1fiY8RAVB9tkVanG9HKTvnGNeZUmORelaN/DPK4sEk7oYzCul6GIAsWJVo9LrwqI5qQrB3bVeJf2lYqymPbbsv4F8T7tyoUX03S3NI7NjNGWl0w7k1Kd/wci8dWxq0p1UxPQ+Nll840sL3+5gb8h+JEi+M5xky0grc7iKfwnhC0l9d8A20QtWcYaJmoAAAAASUVORK5CYII=
+// @connect      ipapi.co
+// @connect      cloudflare-dns.com
+// @connect      whoisjsonapi.com
 // @grant        none
 // @run-at       document-end
 // ==/UserScript==
 
 (function () {
     'use strict';
+
+    // Signal that the script has loaded
+    console.log('✅ GeoBlock Search Results v4.6 loaded');
 
     // Country to flag emoji mapping
     const countryFlags = {
@@ -147,30 +153,6 @@
         'Vietnam': { tlds: ['vn', 'com.vn', 'org.vn', 'net.vn', 'gov.vn', 'edu.vn', 'ac.vn'], detection: 'tld' }
 
     };
-    /*
-    const countryTLDs = {
-        'Argentina': { tlds: ['ar'], detection: 'tld' },
-        'Australia': { tlds: ['au'], detection: 'tld' },
-        'Brazil': { tlds: ['br'], detection: 'tld' },
-        'Canada': { tlds: ['ca'], detection: 'tld' },
-        'China': { tlds: ['cn'], detection: 'tld' },
-        'France': { tlds: ['fr'], detection: 'tld' },
-        'Germany': { tlds: ['de'], detection: 'tld' },
-        'India': { tlds: ['in'], detection: 'tld' },
-        'Iran': { tlds: ['ir'], detection: 'tld' },
-        'Italy': { tlds: ['it'], detection: 'tld' },
-        'Japan': { tlds: ['jp'], detection: 'tld' },
-        'Mexico': { tlds: ['mx'], detection: 'tld' },
-        'Netherlands': { tlds: ['nl'], detection: 'tld' },
-        'North Korea': { tlds: ['kp'], detection: 'tld' },
-        'Poland': { tlds: ['pl'], detection: 'tld' },
-        'Russia': { tlds: ['ru'], detection: 'tld' },
-        'South Korea': { tlds: ['kr'], detection: 'tld' },
-        'Spain': { tlds: ['es'], detection: 'tld' },
-        'Turkey': { tlds: ['tr'], detection: 'tld' },
-        'United Kingdom': { tlds: ['uk', 'co.uk', 'ac.uk', 'gov.uk'], detection: 'tld' },
-        'United States': { tlds: ['us', 'edu', 'gov', 'mil'], detection: 'tld' }
-    };*/
 
     // Well-known domains with known countries
     const knownDomains = {
@@ -242,10 +224,14 @@
     const WHOIS_CACHE = new Map();
     const WHOIS_CACHE_TIME = 7 * 24 * 60 * 60 * 1000; // 7 days
 
+    // Failed lookups logging
+    const FAILED_LOOKUPS = [];
+    const MAX_FAILED_LOGS = 50; // Limit storage
+
     // API rate limiting
     const API_QUEUE = [];
     let API_PROCESSING = false;
-    const API_DELAY = 1500; // 1.5 seconds between requests (safe for 45/min limit)
+    const API_DELAY = 1500; // 1.5 seconds between requests (safe for ipapi.co rate limits)
 
     async function fetchDomainCountry(domain) {
         // Check cache first
@@ -254,20 +240,54 @@
             return cached.country;
         }
 
-        try {
-            // Use ip-api.com (free, no key required, 45 req/min)
-            const response = await fetch(`http://ip-api.com/json/${domain}?fields=country`);
-            const data = await response.json();
+        const lookupAttempt = {
+            domain: domain,
+            timestamp: new Date().toISOString(),
+            attempts: []
+        };
 
-            if (data.country) {
-                GEOLOCATION_CACHE.set(domain, {
-                    country: data.country,
-                    timestamp: Date.now()
-                });
-                return data.country;
+        try {
+            // Use ipapi.co (1000 req/day, accepts domains)
+            const response = await fetch(`https://ipapi.co/${domain}/country_name/`, {
+                headers: { 'User-Agent': 'GeoBlockScript/4.6' },
+                signal: AbortSignal.timeout(5000) // 5 second timeout
+            });
+            
+            lookupAttempt.attempts.push({
+                api: 'ipapi.co',
+                status: response.status,
+                ok: response.ok
+            });
+            
+            if (response.ok) {
+                const country = await response.text();
+                const cleanCountry = country.trim();
+                
+                // Validate response
+                if (cleanCountry && cleanCountry.length < 50 && !cleanCountry.includes('<')) {
+                    GEOLOCATION_CACHE.set(domain, {
+                        country: cleanCountry,
+                        timestamp: Date.now()
+                    });
+                    console.log(`✅ Found ${domain} → ${cleanCountry}`);
+                    return cleanCountry;
+                } else {
+                    lookupAttempt.attempts[0].invalidResponse = cleanCountry;
+                }
             }
         } catch (e) {
-            console.log('Geolocation lookup failed for', domain);
+            lookupAttempt.attempts.push({
+                api: 'ipapi.co',
+                error: e.message,
+                errorType: e.name
+            });
+            console.log('❌ ipapi.co failed for', domain, ':', e.message);
+        }
+
+        // Log the failed attempt
+        FAILED_LOOKUPS.push(lookupAttempt);
+        if (FAILED_LOOKUPS.length > MAX_FAILED_LOGS) {
+            FAILED_LOOKUPS.shift(); // Remove oldest
         }
 
         return null;
@@ -368,8 +388,15 @@
         }
         
         try {
-            // Using whoisjsonapi.com (free tier: 500 requests/day)
-            const response = await fetch(`https://whoisjsonapi.com/v1/${domain}`);
+            // Using whoisjsonapi.com (free tier: 500 requests/day) with timeout
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 5000);
+            
+            const response = await fetch(`https://whoisjsonapi.com/v1/${domain}`, {
+                signal: controller.signal
+            });
+            clearTimeout(timeout);
+            
             const data = await response.json();
             
             // Try multiple country fields
@@ -377,6 +404,11 @@
                          data.admin_country || 
                          data.tech_country ||
                          data.country;
+            
+            // Validate country value
+            if (country && (typeof country !== 'string' || country.length > 100)) {
+                throw new Error('Invalid country value');
+            }
             
             if (country) {
                 // Convert country code to full name if needed
@@ -397,20 +429,35 @@
 
     async function fetchDNSCountry(domain) {
         try {
-            // Use DNS-over-HTTPS to get nameserver info
+            // Use DNS-over-HTTPS to get nameserver info with timeout
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 5000);
+            
             const response = await fetch(
                 `https://cloudflare-dns.com/dns-query?name=${domain}&type=NS`,
                 {
                     headers: {
                         'Accept': 'application/dns-json'
-                    }
+                    },
+                    signal: controller.signal
                 }
             );
+            clearTimeout(timeout);
             
             const data = await response.json();
             
-            if (data.Answer && data.Answer.length > 0) {
+            // Validate response structure
+            if (!data || typeof data !== 'object') {
+                throw new Error('Invalid DNS response');
+            }
+            
+            if (data.Answer && Array.isArray(data.Answer) && data.Answer.length > 0) {
                 const nameserver = data.Answer[0].data;
+                
+                // Validate nameserver data
+                if (typeof nameserver !== 'string' || nameserver.length > 500) {
+                    throw new Error('Invalid nameserver data');
+                }
                 
                 // Common nameserver to country mapping
                 const nsPatterns = {
@@ -445,7 +492,9 @@
     // Check if a country is blocked
     function isCountryBlocked(country) {
         try {
-            const stored = localStorage.getItem('geoblock_' + country);
+            // Sanitize country name for localStorage key
+            const safeCountry = country.replace(/[^a-zA-Z0-9 ]/g, '');
+            const stored = localStorage.getItem('geoblock_' + safeCountry);
             return stored === 'true';
         } catch (e) {
             return false;
@@ -456,7 +505,9 @@
     function toggleCountry(country) {
         const currentState = isCountryBlocked(country);
         try {
-            localStorage.setItem('geoblock_' + country, String(!currentState));
+            // Sanitize country name for localStorage key
+            const safeCountry = country.replace(/[^a-zA-Z0-9 ]/g, '');
+            localStorage.setItem('geoblock_' + safeCountry, String(!currentState));
         } catch (e) {
             alert('Error saving settings');
             return;
@@ -550,7 +601,18 @@
             if (input.includes('://')) {
                 try {
                     const url = new URL(input);
-                    return url.hostname.toLowerCase().replace(/^www\./, '');
+                    const hostname = url.hostname.toLowerCase().replace(/^www\./, '');
+                    
+                    // Skip search engine redirect/tracking domains
+                    if (hostname.includes('duckduckgo.com') ||
+                        hostname.includes('google.com') ||
+                        hostname.includes('bing.com') ||
+                        hostname.includes('yahoo.com') ||
+                        hostname.includes('links.')) {
+                        return null;
+                    }
+                    
+                    return hostname;
                 } catch (e) {
                     // Not a valid URL, try to extract domain
                 }
@@ -574,6 +636,16 @@
                 const match = cleaned.match(pattern);
                 if (match && match[1]) {
                     const domain = match[1].toLowerCase();
+                    
+                    // Skip search engine domains
+                    if (domain.includes('duckduckgo.com') ||
+                        domain.includes('google.com') ||
+                        domain.includes('bing.com') ||
+                        domain.includes('yahoo.com') ||
+                        domain.includes('links.')) {
+                        continue;
+                    }
+                    
                     // Validate domain format
                     if (domain.includes('.') && !domain.startsWith('.') && !domain.endsWith('.')) {
                         return domain;
@@ -587,7 +659,14 @@
                 if (part.includes('.') && !part.startsWith('.')) {
                     const simpleMatch = part.match(/([a-zA-Z0-9][a-zA-Z0-9-]*\.[a-zA-Z]{2,})/);
                     if (simpleMatch && simpleMatch[1]) {
-                        return simpleMatch[1].toLowerCase();
+                        const domain = simpleMatch[1].toLowerCase();
+                        // Skip search engine domains
+                        if (domain.includes('duckduckgo') || 
+                            domain.includes('google') || 
+                            domain.includes('bing')) {
+                            continue;
+                        }
+                        return domain;
                     }
                 }
             }
@@ -681,7 +760,12 @@ async function getDomainCountryWithFallback(domain) {
     function getCustomBlocklist() {
         try {
             const stored = localStorage.getItem('geoblock_custom_domains') || '[]';
-            return JSON.parse(stored);
+            const parsed = JSON.parse(stored);
+            // Validate array
+            if (!Array.isArray(parsed)) {
+                return [];
+            }
+            return parsed;
         } catch (e) {
             return [];
         }
@@ -690,7 +774,18 @@ async function getDomainCountryWithFallback(domain) {
     // Save custom blocked domains
     function saveCustomBlocklist(domains) {
         try {
-            localStorage.setItem('geoblock_custom_domains', JSON.stringify(domains));
+            // Validate and sanitize domains array
+            if (!Array.isArray(domains)) {
+                throw new Error('Invalid domains list');
+            }
+            // Sanitize each domain (basic validation)
+            const safeDomains = domains.filter(d => 
+                typeof d === 'string' && 
+                d.length > 0 && 
+                d.length < 255 &&
+                /^[a-zA-Z0-9.-]+$/.test(d)
+            );
+            localStorage.setItem('geoblock_custom_domains', JSON.stringify(safeDomains));
         } catch (e) {
             alert('Error saving custom domains');
         }
@@ -782,6 +877,8 @@ async function getDomainCountryWithFallback(domain) {
         const selectors = [
             'cite', '.VuuXrf', '.TbwUpd', '.result-url', '.result__url',
             '[data-testid="result-extras-url-link"]',
+            '.result__a span', // DuckDuckGo display URL
+            'a[data-testid="result-title-a"] + div', // DuckDuckGo newer layout
             '.tdi', // Bing
             '.fz6Zhf', // Google newer
             'a[href] span.cite', // Generic
@@ -790,16 +887,27 @@ async function getDomainCountryWithFallback(domain) {
         for (const selector of selectors) {
             const element = result.querySelector(selector);
             if (element && element.textContent.trim()) {
-                return element.textContent.trim();
+                const text = element.textContent.trim();
+                // Skip if it's clearly a redirect URL
+                if (!text.includes('duckduckgo.com') && !text.includes('google.com') && !text.includes('bing.com')) {
+                    return text;
+                }
             }
         }
         
-        // Fallback: get actual href and extract domain
+        // Fallback: get actual href and extract domain (but skip redirect domains)
         const link = result.querySelector('a[href]');
         if (link && link.href) {
             try {
                 const url = new URL(link.href);
-                return url.hostname;
+                const domain = url.hostname.toLowerCase();
+                // Skip search engine redirect domains
+                if (!domain.includes('duckduckgo.com') && 
+                    !domain.includes('google.com') && 
+                    !domain.includes('bing.com') &&
+                    !domain.includes('yahoo.com')) {
+                    return domain;
+                }
             } catch (e) {
                 // Invalid URL
             }
@@ -1336,8 +1444,83 @@ async function getDomainCountryWithFallback(domain) {
         }
     }
 
+    // ========================================
+    // CONSOLE ANALYSIS FUNCTIONS
+    // ========================================
+    //
+    // How to Use in Browser Console:
+    // After a search, open the browser console (F12) and run:
+    //
+    // View all failed lookups in a nice table:
+    //   geoBlockFailedLookups()
+    //
+    // Get detailed analysis with error breakdown:
+    //   geoBlockAnalyzeFailed()
+    //
+    // Export failed domains as CSV:
+    //   geoBlockExportFailed()
+    //
+    // Get list for manual mapping:
+    //   geoBlockGetUnmappedDomains()
+    //
+    // Test a specific domain:
+    //   await geoBlockTestDomain('weathergeeks.org')
+    //
+    // View cache stats:
+    //   geoBlockCacheStats()
+    //
+    // Clear the failed lookups log:
+    //   geoBlockClearFailed()
+    //
+    // ----------------------------------------
+    // Example Console Output:
+    // ----------------------------------------
+    // After running geoBlockAnalyzeFailed()
+    //
+    // 📈 Failed Lookup Analysis
+    // Total failed domains: 8
+    //
+    // 🔸 Domains: weathergeeks.org, vedantu.com, wikiwand.com,
+    //   cambridge.org, biolecta.com, sunlight.net, britannica.com
+    //
+    // 🔸 Error Types: {
+    //   "TimeoutError": 3,
+    //   "AbortError": 2,
+    //   "NetworkError": 3
+    // }
+    //
+    // 🔸 HTTP Status Codes: {
+    //   "429": 2,  // Rate limited
+    //   "503": 1   // Service unavailable
+    // }
+    //
+    // NOTE: All console functions are defined at the bottom of the script
+    //       after init() to ensure they load properly.
+    // ========================================
+
     // Initialize
     function init() {
+        // Privacy notice on first run
+        try {
+            if (!localStorage.getItem('geoblock_privacy_notice')) {
+                const userConsent = confirm(
+                    'GeoBlock Privacy Notice:\n\n' +
+                    'This extension sends domain names from search results to external geolocation APIs ' +
+                    '(ipapi.co, cloudflare-dns.com, whoisjsonapi.com) to determine their country of origin. ' +
+                    'No personal data is sent.\n\n' +
+                    'Do you want to continue using GeoBlock?'
+                );
+                if (userConsent) {
+                    localStorage.setItem('geoblock_privacy_notice', 'true');
+                } else {
+                    // User declined, don't run the script
+                    return;
+                }
+            }
+        } catch (e) {
+            // If localStorage fails, continue anyway
+        }
+
         // Add styles
         const style = document.createElement('style');
         style.textContent = `
@@ -1448,4 +1631,159 @@ async function getDomainCountryWithFallback(domain) {
 
     // Make config function accessible
     window.geoBlockConfig = showConfig;
+    
+    // Console Analysis Functions - All defined here for guaranteed accessibility
+    
+    // View all failed lookups
+    window.geoBlockFailedLookups = function() {
+        console.group('🔴 Failed Geolocation Lookups');
+        console.table(FAILED_LOOKUPS.map(f => ({
+            Domain: f.domain,
+            Time: new Date(f.timestamp).toLocaleTimeString(),
+            Attempts: f.attempts.length,
+            LastError: f.attempts[f.attempts.length - 1]?.error || f.attempts[f.attempts.length - 1]?.status || 'Unknown'
+        })));
+        console.groupEnd();
+        return FAILED_LOOKUPS;
+    };
+
+    // Export failed domains as CSV
+    window.geoBlockExportFailed = function() {
+        const csv = ['Domain,Timestamp,Error'].concat(
+            FAILED_LOOKUPS.map(f => 
+                `${f.domain},${f.timestamp},${JSON.stringify(f.attempts).replace(/,/g, ';')}`
+            )
+        ).join('\n');
+        
+        console.log('📋 Copy this CSV data:\n\n' + csv);
+        
+        // Also copy to clipboard if possible
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(csv);
+            console.log('✅ Copied to clipboard!');
+        }
+        
+        return csv;
+    };
+
+    // View detailed error breakdown
+    window.geoBlockAnalyzeFailed = function() {
+        const errorTypes = {};
+        const statusCodes = {};
+        const domains = [];
+        
+        FAILED_LOOKUPS.forEach(lookup => {
+            domains.push(lookup.domain);
+            lookup.attempts.forEach(attempt => {
+                if (attempt.error) {
+                    errorTypes[attempt.errorType] = (errorTypes[attempt.errorType] || 0) + 1;
+                }
+                if (attempt.status) {
+                    statusCodes[attempt.status] = (statusCodes[attempt.status] || 0) + 1;
+                }
+            });
+        });
+        
+        console.group('📈 Failed Lookup Analysis');
+        console.log('Total failed domains:', FAILED_LOOKUPS.length);
+        console.log('\n🔸 Domains:', domains.join(', '));
+        console.log('\n🔸 Error Types:', errorTypes);
+        console.log('\n🔸 HTTP Status Codes:', statusCodes);
+        console.groupEnd();
+        
+        return {
+            total: FAILED_LOOKUPS.length,
+            domains: domains,
+            errorTypes: errorTypes,
+            statusCodes: statusCodes
+        };
+    };
+
+    // Get domains that need manual mapping
+    window.geoBlockGetUnmappedDomains = function() {
+        const domains = FAILED_LOOKUPS.map(f => f.domain);
+        console.group('🌐 Domains Needing Manual Mapping');
+        console.log('Add these to your knownDomains object:');
+        console.log('\n// In knownDomains:');
+        domains.forEach(domain => {
+            console.log(`'${domain}': 'COUNTRY_NAME_HERE',`);
+        });
+        console.groupEnd();
+        return domains;
+    };
+
+    // Clear failed lookups log
+    window.geoBlockClearFailed = function() {
+        const count = FAILED_LOOKUPS.length;
+        FAILED_LOOKUPS.length = 0;
+        console.log(`🗑️ Cleared ${count} failed lookups`);
+    };
+
+    // View cache statistics
+    window.geoBlockCacheStats = function() {
+        const now = Date.now();
+        const geoStats = {
+            total: GEOLOCATION_CACHE.size,
+            fresh: 0,
+            stale: 0
+        };
+        const whoisStats = {
+            total: WHOIS_CACHE.size,
+            fresh: 0,
+            stale: 0
+        };
+        
+        GEOLOCATION_CACHE.forEach((value, key) => {
+            if (now - value.timestamp < GEOLOCATION_CACHE_TIME) {
+                geoStats.fresh++;
+            } else {
+                geoStats.stale++;
+            }
+        });
+        
+        WHOIS_CACHE.forEach((value, key) => {
+            if (now - value.timestamp < WHOIS_CACHE_TIME) {
+                whoisStats.fresh++;
+            } else {
+                whoisStats.stale++;
+            }
+        });
+        
+        console.group('📦 Cache Statistics');
+        console.log('Geolocation Cache:', geoStats);
+        console.log('WHOIS Cache:', whoisStats);
+        console.log('Known Domains:', Object.keys(knownDomains).length);
+        console.groupEnd();
+        
+        return { geolocation: geoStats, whois: whoisStats, knownDomains: Object.keys(knownDomains).length };
+    };
+
+    // Test a specific domain
+    window.geoBlockTestDomain = async function(domain) {
+        console.log(`🔍 Testing: ${domain}`);
+        const country = await getDomainCountryWithFallback(domain);
+        console.log(`Result: ${country || '❌ Not found'}`);
+        return country;
+    };
+    
+    // Debugging functions for failed lookups (legacy compatibility)
+    window.geoBlockDebug = {
+        getFailedLookups: () => {
+            console.table(FAILED_LOOKUPS);
+            return FAILED_LOOKUPS;
+        },
+        clearFailedLookups: () => {
+            FAILED_LOOKUPS.length = 0;
+            console.log('✓ Cleared failed lookups log');
+        },
+        exportFailedLookups: () => {
+            const data = JSON.stringify({
+                exportTime: new Date().toISOString(),
+                totalFailed: FAILED_LOOKUPS.length,
+                lookups: FAILED_LOOKUPS
+            }, null, 2);
+            console.log(data);
+            return data;
+        }
+    };
 })();
