@@ -30,35 +30,124 @@
 // @run-at       document-end
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
 
     // Country to flag emoji mapping
     const countryFlags = {
         'Argentina': '🇦🇷',
         'Australia': '🇦🇺',
+        'Austria': '🇦🇹',
+        'Bangladesh': '🇧🇩',
+        'Belgium': '🇧🇪',
         'Brazil': '🇧🇷',
         'Canada': '🇨🇦',
         'China': '🇨🇳',
+        'Czech Republic': '🇨🇿',
+        'Denmark': '🇩🇰',
+        'Egypt': '🇪🇬',
+        'Finland': '🇫🇮',
         'France': '🇫🇷',
         'Germany': '🇩🇪',
+        'Greece': '🇬🇷',
+        'Hong Kong': '🇭🇰',
+        'Hungary': '🇭🇺',
         'India': '🇮🇳',
+        'Indonesia': '🇮🇩',
         'Iran': '🇮🇷',
+        'Ireland': '🇮🇪',
+        'Israel': '🇮🇱',
         'Italy': '🇮🇹',
         'Japan': '🇯🇵',
+        'Kenya': '🇰🇪',
+        'Malaysia': '🇲🇾',
         'Mexico': '🇲🇽',
         'Netherlands': '🇳🇱',
+        'New Zealand': '🇳🇿',
+        'Nigeria': '🇳🇬',
         'North Korea': '🇰🇵',
+        'Norway': '🇳🇴',
+        'Pakistan': '🇵🇰',
+        'Philippines': '🇵🇭',
         'Poland': '🇵🇱',
+        'Portugal': '🇵🇹',
+        'Romania': '🇷🇴',
         'Russia': '🇷🇺',
+        'Saudi Arabia': '🇸🇦',
+        'Singapore': '🇸🇬',
+        'South Africa': '🇿🇦',
         'South Korea': '🇰🇷',
         'Spain': '🇪🇸',
+        'Sweden': '🇸🇪',
+        'Switzerland': '🇨🇭',
+        'Taiwan': '🇹🇼',
+        'Thailand': '🇹🇭',
         'Turkey': '🇹🇷',
+        'Ukraine': '🇺🇦',
+        'United Arab Emirates': '🇦🇪',
         'United Kingdom': '🇬🇧',
-        'United States': '🇺🇸'
+        'United States': '🇺🇸',
+        'Vietnam': '🇻🇳'
     };
 
     // Country TLD mapping
+    const countryTLDs = {
+        'Argentina': { tlds: ['ar', 'com.ar', 'org.ar', 'net.ar', 'gov.ar', 'edu.ar', 'mil.ar'], detection: 'tld' },
+        'Australia': { tlds: ['au', 'com.au', 'org.au', 'net.au', 'edu.au', 'gov.au', 'asn.au', 'id.au'], detection: 'tld' },
+        'Austria': { tlds: ['at', 'co.at', 'or.at', 'ac.at', 'gv.at'], detection: 'tld' },
+        'Bangladesh': { tlds: ['bd', 'com.bd', 'org.bd', 'net.bd', 'gov.bd', 'edu.bd', 'ac.bd'], detection: 'tld' },
+        'Belgium': { tlds: ['be', 'com.be', 'org.be', 'net.be', 'ac.be', 'gov.be'], detection: 'tld' },
+        'Brazil': { tlds: ['br', 'com.br', 'org.br', 'net.br', 'gov.br', 'edu.br', 'mil.br'], detection: 'tld' },
+        'Canada': { tlds: ['ca', 'com.ca', 'org.ca', 'net.ca', 'gc.ca'], detection: 'tld' },
+        'China': { tlds: ['cn', 'com.cn', 'org.cn', 'net.cn', 'gov.cn', 'edu.cn', 'ac.cn'], detection: 'tld' },
+        'Czech Republic': { tlds: ['cz', 'co.cz'], detection: 'tld' },
+        'Denmark': { tlds: ['dk', 'co.dk'], detection: 'tld' },
+        'Egypt': { tlds: ['eg', 'com.eg', 'org.eg', 'net.eg', 'gov.eg', 'edu.eg'], detection: 'tld' },
+        'Finland': { tlds: ['fi', 'com.fi', 'org.fi', 'net.fi', 'gov.fi', 'edu.fi'], detection: 'tld' },
+        'France': { tlds: ['fr', 'com.fr', 'org.fr', 'net.fr', 'gouv.fr', 'asso.fr'], detection: 'tld' },
+        'Germany': { tlds: ['de', 'com.de', 'org.de', 'net.de'], detection: 'tld' },
+        'Greece': { tlds: ['gr', 'com.gr', 'org.gr', 'net.gr', 'gov.gr', 'edu.gr'], detection: 'tld' },
+        'Hong Kong': { tlds: ['hk', 'com.hk', 'org.hk', 'net.hk', 'gov.hk', 'edu.hk'], detection: 'tld' },
+        'Hungary': { tlds: ['hu', 'co.hu', 'org.hu', 'gov.hu', 'edu.hu'], detection: 'tld' },
+        'India': { tlds: ['in', 'co.in', 'org.in', 'net.in', 'gov.in', 'edu.in', 'ac.in', 'nic.in'], detection: 'tld' },
+        'Indonesia': { tlds: ['id', 'co.id', 'or.id', 'net.id', 'go.id', 'ac.id', 'web.id'], detection: 'tld' },
+        'Iran': { tlds: ['ir', 'com.ir', 'org.ir', 'net.ir', 'gov.ir', 'ac.ir', 'co.ir'], detection: 'tld' },
+        'Ireland': { tlds: ['ie', 'com.ie', 'org.ie', 'net.ie', 'gov.ie'], detection: 'tld' },
+        'Israel': { tlds: ['il', 'co.il', 'org.il', 'net.il', 'gov.il', 'ac.il'], detection: 'tld' },
+        'Italy': { tlds: ['it', 'com.it', 'org.it', 'net.it', 'gov.it', 'edu.it'], detection: 'tld' },
+        'Japan': { tlds: ['jp', 'co.jp', 'or.jp', 'ne.jp', 'go.jp', 'ac.jp', 'ed.jp', 'lg.jp'], detection: 'tld' },
+        'Kenya': { tlds: ['ke', 'co.ke', 'or.ke', 'ne.ke', 'go.ke', 'ac.ke'], detection: 'tld' },
+        'Malaysia': { tlds: ['my', 'com.my', 'org.my', 'net.my', 'gov.my', 'edu.my'], detection: 'tld' },
+        'Mexico': { tlds: ['mx', 'com.mx', 'org.mx', 'net.mx', 'gob.mx', 'edu.mx'], detection: 'tld' },
+        'Netherlands': { tlds: ['nl', 'com.nl', 'org.nl', 'net.nl', 'co.nl'], detection: 'tld' },
+        'New Zealand': { tlds: ['nz', 'co.nz', 'org.nz', 'net.nz', 'govt.nz', 'ac.nz'], detection: 'tld' },
+        'Nigeria': { tlds: ['ng', 'com.ng', 'org.ng', 'net.ng', 'gov.ng', 'edu.ng'], detection: 'tld' },
+        'North Korea': { tlds: ['kp', 'com.kp', 'org.kp', 'net.kp', 'gov.kp', 'edu.kp'], detection: 'tld' },
+        'Norway': { tlds: ['no', 'co.no', 'org.no', 'net.no', 'gov.no'], detection: 'tld' },
+        'Pakistan': { tlds: ['pk', 'com.pk', 'org.pk', 'net.pk', 'gov.pk', 'edu.pk'], detection: 'tld' },
+        'Philippines': { tlds: ['ph', 'com.ph', 'org.ph', 'net.ph', 'gov.ph', 'edu.ph'], detection: 'tld' },
+        'Poland': { tlds: ['pl', 'com.pl', 'org.pl', 'net.pl', 'gov.pl', 'edu.pl', 'co.pl'], detection: 'tld' },
+        'Portugal': { tlds: ['pt', 'com.pt', 'org.pt', 'net.pt', 'gov.pt', 'edu.pt'], detection: 'tld' },
+        'Romania': { tlds: ['ro', 'com.ro', 'org.ro', 'net.ro', 'gov.ro', 'edu.ro'], detection: 'tld' },
+        'Russia': { tlds: ['ru', 'com.ru', 'org.ru', 'net.ru', 'gov.ru', 'edu.ru', 'mil.ru'], detection: 'tld' },
+        'Saudi Arabia': { tlds: ['sa', 'com.sa', 'org.sa', 'net.sa', 'gov.sa', 'edu.sa'], detection: 'tld' },
+        'Singapore': { tlds: ['sg', 'com.sg', 'org.sg', 'net.sg', 'gov.sg', 'edu.sg'], detection: 'tld' },
+        'South Africa': { tlds: ['za', 'co.za', 'org.za', 'net.za', 'gov.za', 'ac.za'], detection: 'tld' },
+        'South Korea': { tlds: ['kr', 'co.kr', 'or.kr', 'ne.kr', 'go.kr', 'ac.kr', 're.kr', 'pe.kr'], detection: 'tld' },
+        'Spain': { tlds: ['es', 'com.es', 'org.es', 'net.es', 'gob.es', 'edu.es'], detection: 'tld' },
+        'Sweden': { tlds: ['se', 'com.se', 'org.se', 'net.se'], detection: 'tld' },
+        'Switzerland': { tlds: ['ch', 'com.ch', 'org.ch', 'net.ch', 'gov.ch'], detection: 'tld' },
+        'Taiwan': { tlds: ['tw', 'com.tw', 'org.tw', 'net.tw', 'gov.tw', 'edu.tw'], detection: 'tld' },
+        'Thailand': { tlds: ['th', 'co.th', 'or.th', 'net.th', 'go.th', 'ac.th'], detection: 'tld' },
+        'Turkey': { tlds: ['tr', 'com.tr', 'org.tr', 'net.tr', 'gov.tr', 'edu.tr', 'biz.tr'], detection: 'tld' },
+        'Ukraine': { tlds: ['ua', 'com.ua', 'org.ua', 'net.ua', 'gov.ua', 'edu.ua'], detection: 'tld' },
+        'United Arab Emirates': { tlds: ['ae', 'co.ae', 'org.ae', 'net.ae', 'gov.ae', 'ac.ae'], detection: 'tld' },
+        'United Kingdom': { tlds: ['uk', 'co.uk', 'ac.uk', 'gov.uk', 'org.uk', 'net.uk', 'sch.uk', 'nhs.uk', 'police.uk'], detection: 'tld' },
+        'United States': { tlds: ['us', 'com.us', 'org.us', 'net.us', 'edu', 'gov', 'mil'], detection: 'tld' },
+        'Vietnam': { tlds: ['vn', 'com.vn', 'org.vn', 'net.vn', 'gov.vn', 'edu.vn', 'ac.vn'], detection: 'tld' }
+
+    };
+    /*
     const countryTLDs = {
         'Argentina': { tlds: ['ar'], detection: 'tld' },
         'Australia': { tlds: ['au'], detection: 'tld' },
@@ -81,7 +170,7 @@
         'Turkey': { tlds: ['tr'], detection: 'tld' },
         'United Kingdom': { tlds: ['uk', 'co.uk', 'ac.uk', 'gov.uk'], detection: 'tld' },
         'United States': { tlds: ['us', 'edu', 'gov', 'mil'], detection: 'tld' }
-    };
+    };*/
 
     // Well-known domains with known countries
     const knownDomains = {
@@ -114,8 +203,244 @@
         'naver.com': 'South Korea',
         'daum.net': 'South Korea',
         'rakuten.co.jp': 'Japan',
-        'yahoo.co.jp': 'Japan'
+        'yahoo.co.jp': 'Japan',
+        // News & Media
+        'bbc.co.uk': 'United Kingdom',
+        'bbc.com': 'United Kingdom',
+        'theguardian.com': 'United Kingdom',
+        // Learning & Education
+        'w3schools.com': 'Norway',
+        'tutorialspoint.com': 'India',
+        'javatpoint.com': 'India',
+        'programiz.com': 'Nepal',
+        'freecodecamp.org': 'United States',
+        'codecademy.com': 'United States',
+        'udemy.com': 'United States',
+        'coursera.org': 'United States',
+        'edx.org': 'United States',
+        'khanacademy.org': 'United States',
+        // Package Managers
+        'npmjs.com': 'United States',
+        'pypi.org': 'United States',
+        'rubygems.org': 'United States',
+        'packagist.org': 'United Kingdom',
+        'crates.io': 'United States',
+        // Documentation
+        'docs.oracle.com': 'United States',
+        'docs.microsoft.com': 'United States',
+        'developer.mozilla.org': 'United States',
+        'php.net': 'United States',
+        'python.org': 'United States',
+        'ruby-lang.org': 'Japan',
+        'golang.org': 'United States',
+        'rust-lang.org': 'United States'
     };
+
+    // Add after the knownDomains object
+    const GEOLOCATION_CACHE = new Map();
+    const GEOLOCATION_CACHE_TIME = 24 * 60 * 60 * 1000; // 24 hours
+    const WHOIS_CACHE = new Map();
+    const WHOIS_CACHE_TIME = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+    // API rate limiting
+    const API_QUEUE = [];
+    let API_PROCESSING = false;
+    const API_DELAY = 1500; // 1.5 seconds between requests (safe for 45/min limit)
+
+    async function fetchDomainCountry(domain) {
+        // Check cache first
+        const cached = GEOLOCATION_CACHE.get(domain);
+        if (cached && Date.now() - cached.timestamp < GEOLOCATION_CACHE_TIME) {
+            return cached.country;
+        }
+
+        try {
+            // Use ip-api.com (free, no key required, 45 req/min)
+            const response = await fetch(`http://ip-api.com/json/${domain}?fields=country`);
+            const data = await response.json();
+
+            if (data.country) {
+                GEOLOCATION_CACHE.set(domain, {
+                    country: data.country,
+                    timestamp: Date.now()
+                });
+                return data.country;
+            }
+        } catch (e) {
+            console.log('Geolocation lookup failed for', domain);
+        }
+
+        return null;
+    }
+
+    async function processAPIQueue() {
+        if (API_PROCESSING || API_QUEUE.length === 0) return;
+        
+        API_PROCESSING = true;
+        
+        while (API_QUEUE.length > 0) {
+            const { domain, resolve } = API_QUEUE.shift();
+            const country = await fetchDomainCountry(domain);
+            resolve(country);
+            
+            if (API_QUEUE.length > 0) {
+                await new Promise(r => setTimeout(r, API_DELAY));
+            }
+        }
+        
+        API_PROCESSING = false;
+    }
+
+    async function fetchDomainCountryQueued(domain) {
+        return new Promise((resolve) => {
+            API_QUEUE.push({ domain, resolve });
+            processAPIQueue();
+        });
+    }
+
+    // Convert ISO country codes to full names
+    function convertCountryCode(code) {
+        const codes = {
+            'US': 'United States',
+            'GB': 'United Kingdom',
+            'UK': 'United Kingdom',
+            'DE': 'Germany',
+            'FR': 'France',
+            'CA': 'Canada',
+            'AU': 'Australia',
+            'JP': 'Japan',
+            'CN': 'China',
+            'IN': 'India',
+            'BR': 'Brazil',
+            'RU': 'Russia',
+            'KR': 'South Korea',
+            'MX': 'Mexico',
+            'ES': 'Spain',
+            'IT': 'Italy',
+            'NL': 'Netherlands',
+            'TR': 'Turkey',
+            'AR': 'Argentina',
+            'PL': 'Poland',
+            'IR': 'Iran',
+            'KP': 'North Korea',
+            'NO': 'Norway',
+            'SE': 'Sweden',
+            'CH': 'Switzerland',
+            'AT': 'Austria',
+            'BE': 'Belgium',
+            'DK': 'Denmark',
+            'FI': 'Finland',
+            'GR': 'Greece',
+            'IE': 'Ireland',
+            'PT': 'Portugal',
+            'CZ': 'Czech Republic',
+            'HU': 'Hungary',
+            'RO': 'Romania',
+            'UA': 'Ukraine',
+            'EG': 'Egypt',
+            'IL': 'Israel',
+            'SA': 'Saudi Arabia',
+            'AE': 'United Arab Emirates',
+            'ZA': 'South Africa',
+            'NG': 'Nigeria',
+            'KE': 'Kenya',
+            'BD': 'Bangladesh',
+            'PK': 'Pakistan',
+            'ID': 'Indonesia',
+            'PH': 'Philippines',
+            'VN': 'Vietnam',
+            'TH': 'Thailand',
+            'MY': 'Malaysia',
+            'SG': 'Singapore',
+            'HK': 'Hong Kong',
+            'TW': 'Taiwan',
+            'NZ': 'New Zealand'
+        };
+        
+        return codes[code.toUpperCase()] || code;
+    }
+
+    async function fetchWhoisCountry(domain) {
+        // Check cache
+        const cached = WHOIS_CACHE.get(domain);
+        if (cached && Date.now() - cached.timestamp < WHOIS_CACHE_TIME) {
+            return cached.country;
+        }
+        
+        try {
+            // Using whoisjsonapi.com (free tier: 500 requests/day)
+            const response = await fetch(`https://whoisjsonapi.com/v1/${domain}`);
+            const data = await response.json();
+            
+            // Try multiple country fields
+            let country = data.registrant_country || 
+                         data.admin_country || 
+                         data.tech_country ||
+                         data.country;
+            
+            if (country) {
+                // Convert country code to full name if needed
+                country = convertCountryCode(country);
+                
+                WHOIS_CACHE.set(domain, {
+                    country: country,
+                    timestamp: Date.now()
+                });
+                return country;
+            }
+        } catch (e) {
+            // Silently fail - WHOIS lookups may not work for all domains
+        }
+        
+        return null;
+    }
+
+    async function fetchDNSCountry(domain) {
+        try {
+            // Use DNS-over-HTTPS to get nameserver info
+            const response = await fetch(
+                `https://cloudflare-dns.com/dns-query?name=${domain}&type=NS`,
+                {
+                    headers: {
+                        'Accept': 'application/dns-json'
+                    }
+                }
+            );
+            
+            const data = await response.json();
+            
+            if (data.Answer && data.Answer.length > 0) {
+                const nameserver = data.Answer[0].data;
+                
+                // Common nameserver to country mapping
+                const nsPatterns = {
+                    'chinanet': 'China',
+                    'dnspod': 'China',
+                    'dns.cn': 'China',
+                    'yandex.ru': 'Russia',
+                    'dns.ru': 'Russia',
+                    'cloudflare': 'United States',
+                    'googledomains': 'United States',
+                    'awsdns': 'United States',
+                    'azure': 'United States',
+                    'nsone': 'United States',
+                    'dnsimple': 'United States',
+                    'namecheap': 'United States',
+                    'godaddy': 'United States'
+                };
+                
+                for (const [pattern, country] of Object.entries(nsPatterns)) {
+                    if (nameserver.toLowerCase().includes(pattern)) {
+                        return country;
+                    }
+                }
+            }
+        } catch (e) {
+            // Silently fail - DNS lookups may not work for all domains
+        }
+        
+        return null;
+    }
 
     // Check if a country is blocked
     function isCountryBlocked(country) {
@@ -136,10 +461,10 @@
             alert('Error saving settings');
             return;
         }
-        
+
         // Update all flags on the page to reflect new state
         updateAllFlags();
-        
+
         // Show feedback
         showNotification(!currentState ? `Blocked ${country}` : `Unblocked ${country}`);
     }
@@ -153,7 +478,7 @@
                 const isBlocked = isCountryBlocked(country);
                 // Update flag appearance based on blocked state
                 flag.style.opacity = isBlocked ? '0.6' : '1';
-                
+
                 // Update the result display
                 const result = flag.closest('[data-geoblock-checked]');
                 if (result) {
@@ -174,7 +499,7 @@
         if (existing) {
             existing.remove();
         }
-        
+
         const notification = document.createElement('div');
         notification.id = 'geoblock-notification';
         notification.textContent = message;
@@ -191,7 +516,7 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
             animation: fadeIn 0.3s, fadeOut 0.3s 2.7s;
         `;
-        
+
         // Add animation styles
         const style = document.createElement('style');
         style.textContent = `
@@ -205,9 +530,9 @@
             }
         `;
         document.head.appendChild(style);
-        
+
         document.body.appendChild(notification);
-        
+
         // Auto-remove after 3 seconds
         setTimeout(() => {
             if (notification.parentNode) {
@@ -219,7 +544,7 @@
     // Extract domain from URL or display text
     function extractDomain(input) {
         if (!input) return null;
-        
+
         try {
             // If it's already a valid URL
             if (input.includes('://')) {
@@ -230,21 +555,21 @@
                     // Not a valid URL, try to extract domain
                 }
             }
-            
+
             // Remove any › symbols and clean up
             const cleaned = input
                 .replace(/›/g, '/')
                 .replace(/\s+/g, '')
                 .replace(/\/+/g, '/')
                 .trim();
-            
+
             // Try to find domain pattern
             const domainPatterns = [
                 /(?:https?:\/\/)?(?:www\.)?([a-zA-Z0-9][a-zA-Z0-9-]*\.[a-zA-Z]{2,})(?:\/|$)/,
                 /(?:https?:\/\/)?([a-zA-Z0-9][a-zA-Z0-9-]*\.[a-zA-Z]{2,})/,
                 /([a-zA-Z0-9][a-zA-Z0-9-]*\.[a-zA-Z]{2,})/
             ];
-            
+
             for (const pattern of domainPatterns) {
                 const match = cleaned.match(pattern);
                 if (match && match[1]) {
@@ -255,7 +580,7 @@
                     }
                 }
             }
-            
+
             // Last attempt: split by spaces and look for something that looks like a domain
             const parts = input.split(/\s+/);
             for (const part of parts) {
@@ -266,42 +591,91 @@
                     }
                 }
             }
-            
+
         } catch (e) {
             console.error('Error extracting domain:', e);
         }
-        
+
         return null;
     }
 
-    // Get country for a domain
-    function getDomainCountry(domain) {
-        if (!domain) return null;
-        
-        // Check known domains first
-        if (knownDomains[domain]) {
-            return knownDomains[domain];
-        }
-        
-        // Check country TLDs
-        const tld = domain.split('.').pop();
+    
+
+    
+// Enhanced TLD checking
+function getDomainCountry(domain) {
+    if (!domain) return null;
+    
+    // Check known domains first
+    if (knownDomains[domain]) {
+        return knownDomains[domain];
+    }
+    
+    // Check for multi-level TLDs (e.g., co.uk, com.au)
+    const parts = domain.split('.');
+    if (parts.length >= 3) {
+        const multiTLD = parts.slice(-2).join('.');
         for (const country in countryTLDs) {
-            const countryData = countryTLDs[country];
-            if (countryData.tlds.includes(tld)) {
+            if (countryTLDs[country].tlds.includes(multiTLD)) {
                 return country;
             }
         }
-        
-        // Check custom domain blocklist
-        const blocklist = getCustomBlocklist();
-        for (const blockedDomain of blocklist) {
-            if (domain === blockedDomain || domain.endsWith('.' + blockedDomain)) {
-                return 'Custom Blocked';
-            }
-        }
-        
-        return null;
     }
+    
+    // Check single TLD
+    const tld = parts[parts.length - 1];
+    for (const country in countryTLDs) {
+        if (countryTLDs[country].tlds.includes(tld)) {
+            return country;
+        }
+    }
+    
+    // Check custom blocklist
+    const blocklist = getCustomBlocklist();
+    for (const blockedDomain of blocklist) {
+        if (domain === blockedDomain || domain.endsWith('.' + blockedDomain)) {
+            return 'Custom Blocked';
+        }
+    }
+    
+    return null;
+}
+
+// Domain country detection with API fallback
+async function getDomainCountryWithFallback(domain) {
+    // Try local detection first (fast)
+    let country = getDomainCountry(domain);
+    
+    if (country) {
+        return country;
+    }
+    
+    // Fallback to geolocation API with rate limiting (slower but more accurate)
+    country = await fetchDomainCountryQueued(domain);
+    
+    if (country && countryFlags[country]) {
+        knownDomains[domain] = country;
+        return country;
+    }
+    
+    // Third fallback: DNS nameserver lookup (fast and reliable)
+    country = await fetchDNSCountry(domain);
+    
+    if (country && countryFlags[country]) {
+        knownDomains[domain] = country;
+        return country;
+    }
+    
+    // Final fallback: WHOIS lookup (slowest but most comprehensive)
+    country = await fetchWhoisCountry(domain);
+    
+    // If found via WHOIS, add to known domains for future
+    if (country && countryFlags[country]) {
+        knownDomains[domain] = country;
+    }
+    
+    return country;
+}
 
     // Get custom blocked domains
     function getCustomBlocklist() {
@@ -327,7 +701,7 @@
         const blocklist = getCustomBlocklist();
         let message = 'Custom Domain Blocklist\n\n';
         message += 'Currently blocked domains:\n';
-        
+
         if (blocklist.length === 0) {
             message += '(none)\n';
         } else {
@@ -335,18 +709,18 @@
                 message += `${index + 1}. ${domain}\n`;
             });
         }
-        
+
         message += '\n\nOptions:\n';
         message += 'ADD domain.com - Add a domain\n';
         message += 'REMOVE 1,2,3 - Remove domains by number\n';
         message += 'CLEAR - Remove all custom domains\n';
-        
+
         const input = prompt(message);
-        
+
         if (!input) return;
-        
+
         const cmd = input.trim().toUpperCase();
-        
+
         if (cmd.startsWith('ADD ')) {
             const domain = input.substring(4).trim().toLowerCase();
             if (domain && !blocklist.includes(domain)) {
@@ -358,7 +732,7 @@
         } else if (cmd.startsWith('REMOVE ')) {
             const numbers = input.substring(7).split(',').map(n => parseInt(n.trim()));
             const toRemove = numbers.map(n => blocklist[n - 1]).filter(d => d);
-            
+
             const newList = blocklist.filter(d => !toRemove.includes(d));
             saveCustomBlocklist(newList);
             alert(`Removed ${toRemove.length} domain(s)`);
@@ -373,7 +747,7 @@
     // Get search result selectors
     function getResultSelectors() {
         const hostname = window.location.hostname.toLowerCase();
-        
+
         if (hostname.includes('google')) {
             return ['div.g', 'div[data-hveid]', 'div.tF2Cxc'];
         } else if (hostname.includes('duckduckgo')) {
@@ -404,40 +778,38 @@
     function getDisplayURL(result) {
         const hostname = window.location.hostname.toLowerCase();
         
-        if (hostname.includes('duckduckgo')) {
-            // Look for URL display in DuckDuckGo
-            const urlElement = result.querySelector('[data-testid="result-extras-url-link"], .result__url');
-            if (urlElement && urlElement.textContent) {
-                return urlElement.textContent.trim();
-            }
-            
-            // Also check link titles
-            const links = result.querySelectorAll('a[href]');
-            for (const link of links) {
-                if (link.textContent && (link.textContent.includes('.com') || link.textContent.includes('.org') || 
-                    link.textContent.includes('.net') || link.textContent.includes('.io'))) {
-                    return link.textContent.trim();
-                }
+        // Try multiple methods in order of reliability
+        const selectors = [
+            'cite', '.VuuXrf', '.TbwUpd', '.result-url', '.result__url',
+            '[data-testid="result-extras-url-link"]',
+            '.tdi', // Bing
+            '.fz6Zhf', // Google newer
+            'a[href] span.cite', // Generic
+        ];
+        
+        for (const selector of selectors) {
+            const element = result.querySelector(selector);
+            if (element && element.textContent.trim()) {
+                return element.textContent.trim();
             }
         }
         
-        // For Google and others, get the cite element
-        const cite = result.querySelector('cite, .VuuXrf, .TbwUpd, .result-url');
-        if (cite && cite.textContent) {
-            return cite.textContent.trim();
-        }
-        
-        // Fallback: get first link text
-        const firstLink = result.querySelector('a[href]');
-        if (firstLink && firstLink.textContent) {
-            return firstLink.textContent.trim();
+        // Fallback: get actual href and extract domain
+        const link = result.querySelector('a[href]');
+        if (link && link.href) {
+            try {
+                const url = new URL(link.href);
+                return url.hostname;
+            } catch (e) {
+                // Invalid URL
+            }
         }
         
         return null;
     }
 
     // Filter search results
-    function filterResults() {
+    async function filterResults() {
         const selectors = getResultSelectors();
         
         for (const selector of selectors) {
@@ -447,27 +819,22 @@
                 if (result.hasAttribute('data-geoblock-checked')) continue;
                 result.setAttribute('data-geoblock-checked', 'true');
 
-                // Get display URL
                 const displayURL = getDisplayURL(result);
                 
                 if (displayURL) {
-                    // Extract domain
                     const domain = extractDomain(displayURL);
                     
                     if (domain) {
-                        // Get country
-                        const country = getDomainCountry(domain);
+                        // Use async version with API fallback
+                        const country = await getDomainCountryWithFallback(domain);
                         
-                        // Add flag indicator with country name
                         if (country && countryFlags[country]) {
                             addFlagIndicator(result, country);
                             
-                            // Check if blocked
                             if (isCountryBlocked(country)) {
                                 blockResult(result, country);
                             }
                         } else if (country === 'Custom Blocked') {
-                            // Handle custom blocked domains
                             blockResult(result, 'Custom Blocked Domain');
                         }
                     }
@@ -494,13 +861,13 @@
             border-radius: 4px !important;
             margin-right: 8px !important;
         `;
-        
+
         // Add flag emoji
         const flagEmoji = document.createElement('span');
         flagEmoji.textContent = flag;
         flagEmoji.style.cssText = 'font-size: 16px !important;';
         flagElement.appendChild(flagEmoji);
-        
+
         // Add country name if requested (for search results only)
         if (showCountryName) {
             const countryName = document.createElement('span');
@@ -513,25 +880,25 @@
             `;
             flagElement.appendChild(countryName);
         }
-        
+
         // Add hover effect
         flagElement.addEventListener('mouseenter', () => {
             flagElement.style.transform = 'scale(1.05)';
             flagElement.style.background = 'rgba(0, 0, 0, 0.05)';
         });
-        
+
         flagElement.addEventListener('mouseleave', () => {
             flagElement.style.transform = 'scale(1)';
             flagElement.style.background = 'transparent';
         });
-        
+
         // Make flag clickable
         flagElement.addEventListener('click', (e) => {
             e.stopPropagation();
             e.preventDefault();
             toggleCountry(country);
         });
-        
+
         return flagElement;
     }
 
@@ -553,25 +920,25 @@
             margin-right: 12px !important;
             font-size: 16px !important;
         `;
-        
+
         // Add hover effect
         flagElement.addEventListener('mouseenter', () => {
             flagElement.style.transform = 'scale(1.05)';
             flagElement.style.background = 'rgba(0, 0, 0, 0.05)';
         });
-        
+
         flagElement.addEventListener('mouseleave', () => {
             flagElement.style.transform = 'scale(1)';
             flagElement.style.background = 'transparent';
         });
-        
+
         // Make flag clickable
         flagElement.addEventListener('click', (e) => {
             e.stopPropagation();
             e.preventDefault();
             toggleCountry(country);
         });
-        
+
         return flagElement;
     }
 
@@ -579,13 +946,13 @@
     function addFlagIndicator(result, country) {
         // Don't add duplicate flags
         if (result.querySelector('.geoblock-flag[data-country="' + country + '"]')) return;
-        
+
         // Create flag WITH country name for search results
         const flagElement = createFlagElement(country, true);
-        
+
         // Find the best place to insert the flag
         const hostname = window.location.hostname.toLowerCase();
-        
+
         if (hostname.includes('duckduckgo')) {
             // DuckDuckGo: insert before title
             const title = result.querySelector('a[data-testid="result-title-a"], h2, .result__title');
@@ -594,7 +961,7 @@
                 return;
             }
         }
-        
+
         if (hostname.includes('google')) {
             // Google: insert before h3 title
             const title = result.querySelector('h3');
@@ -603,7 +970,7 @@
                 return;
             }
         }
-        
+
         // Generic placement
         const title = result.querySelector('h1, h2, h3, h4, .title');
         if (title) {
@@ -618,22 +985,22 @@
         // Hide all content except the flag and blocked indicator
         const flag = result.querySelector('.geoblock-flag');
         const children = result.children;
-        
+
         // First, make sure the flag is visible
         if (flag) {
             flag.style.display = 'inline-flex';
             flag.style.pointerEvents = 'auto'; // Keep flag clickable
         }
-        
+
         // Hide all other children
         for (let i = 0; i < children.length; i++) {
             const child = children[i];
-            if (!child.classList.contains('geoblock-flag') && 
+            if (!child.classList.contains('geoblock-flag') &&
                 !child.classList.contains('geoblock-blocked-indicator')) {
                 child.style.display = 'none';
             }
         }
-        
+
         // Reduce height and add visual styling
         result.style.opacity = '0.7';
         result.style.minHeight = 'auto';
@@ -643,7 +1010,7 @@
         result.style.borderRadius = '6px';
         result.style.border = '1px solid rgba(0, 0, 0, 0.02)';
         result.style.pointerEvents = 'none';
-        
+
         // Add blocked indicator if not already present
         if (!result.querySelector('.geoblock-blocked-indicator')) {
             const blockedIndicator = document.createElement('span');
@@ -651,13 +1018,13 @@
             blockedIndicator.textContent = ' 🚫 Blocked';
             blockedIndicator.className = 'geoblock-blocked-indicator';
             blockedIndicator.title = `Blocked content from ${country} - Click flag to unblock`;
-            
+
             // Add indicator next to flag
             if (flag) {
                 flag.parentNode.insertBefore(blockedIndicator, flag.nextSibling);
             }
         }
-        
+
         // Also add a tooltip to the entire result
         result.title = `Blocked: Content from ${country} - Click flag to unblock`;
     }
@@ -670,7 +1037,7 @@
             const child = children[i];
             child.style.display = '';
         }
-        
+
         // Reset styling
         result.style.opacity = '1';
         result.style.minHeight = '';
@@ -681,7 +1048,7 @@
         result.style.border = '';
         result.style.pointerEvents = '';
         result.title = '';
-        
+
         // Remove blocked indicator
         const blockedIndicator = result.querySelector('.geoblock-blocked-indicator');
         if (blockedIndicator) {
@@ -707,7 +1074,7 @@
             z-index: 100000;
             animation: fadeIn 0.3s;
         `;
-        
+
         const dialog = document.createElement('div');
         dialog.style.cssText = `
             background: white;
@@ -720,7 +1087,7 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             animation: slideIn 0.3s;
         `;
-        
+
         // Add animation styles
         const style = document.createElement('style');
         style.textContent = `
@@ -734,15 +1101,15 @@
             }
         `;
         document.head.appendChild(style);
-        
+
         // Header
         const header = document.createElement('div');
         header.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;';
-        
+
         const title = document.createElement('h2');
         title.textContent = '🌍 GeoBlock Configuration';
         title.style.cssText = 'margin: 0; font-size: 20px; color: #1a1a1a;';
-        
+
         const closeButton = document.createElement('button');
         closeButton.textContent = '✕';
         closeButton.style.cssText = `
@@ -763,14 +1130,14 @@
         closeButton.addEventListener('mouseleave', () => {
             closeButton.style.background = 'none';
         });
-        
+
         header.appendChild(title);
         header.appendChild(closeButton);
-        
+
         // Countries list
         const countriesList = document.createElement('div');
         countriesList.style.cssText = 'margin-bottom: 20px;';
-        
+
         const countries = Object.keys(countryTLDs).sort();
         countries.forEach(country => {
             const countryItem = document.createElement('div');
@@ -784,7 +1151,7 @@
                 transition: background 0.2s;
                 cursor: pointer;
             `;
-            
+
             // Add hover effect
             countryItem.addEventListener('mouseenter', () => {
                 countryItem.style.background = '#e9ecef';
@@ -792,27 +1159,27 @@
             countryItem.addEventListener('mouseleave', () => {
                 countryItem.style.background = '#f8f9fa';
             });
-            
+
             // Create clickable flag WITHOUT country name for config menu
             const flagElement = createConfigFlagElement(country);
             flagElement.style.marginRight = '12px';
             flagElement.style.marginLeft = '0';
-            
+
             // Add country info (country name in separate element)
             const countryInfo = document.createElement('div');
             countryInfo.style.cssText = 'flex: 1;';
-            
+
             const countryName = document.createElement('span');
             countryName.textContent = country;
             countryName.style.cssText = 'font-weight: 500; font-size: 14px; color: #1a1a1a;';
-            
+
             const tldInfo = document.createElement('div');
             tldInfo.textContent = '.' + countryTLDs[country].tlds[0];
             tldInfo.style.cssText = 'font-size: 12px; color: #666; margin-top: 2px;';
-            
+
             countryInfo.appendChild(countryName);
             countryInfo.appendChild(tldInfo);
-            
+
             // Status indicator
             const status = document.createElement('span');
             status.textContent = isCountryBlocked(country) ? '✓ Blocked' : '○ Allowed';
@@ -824,11 +1191,11 @@
                 border-radius: 4px;
                 background: ${isCountryBlocked(country) ? 'rgba(220, 53, 69, 0.1)' : 'rgba(40, 167, 69, 0.1)'};
             `;
-            
+
             countryItem.appendChild(flagElement);
             countryItem.appendChild(countryInfo);
             countryItem.appendChild(status);
-            
+
             // Make entire item clickable
             countryItem.addEventListener('click', (e) => {
                 if (!e.target.closest('.geoblock-config-flag')) {
@@ -839,14 +1206,14 @@
                     status.style.background = isCountryBlocked(country) ? 'rgba(220, 53, 69, 0.1)' : 'rgba(40, 167, 69, 0.1)';
                 }
             });
-            
+
             countriesList.appendChild(countryItem);
         });
-        
+
         // Controls
         const controls = document.createElement('div');
         controls.style.cssText = 'display: flex; gap: 10px; margin-top: 20px;';
-        
+
         const domainsButton = document.createElement('button');
         domainsButton.textContent = 'Manage Custom Domains';
         domainsButton.style.cssText = `
@@ -871,7 +1238,7 @@
         domainsButton.addEventListener('mouseleave', () => {
             domainsButton.style.background = '#6c757d';
         });
-        
+
         const closeDialogButton = document.createElement('button');
         closeDialogButton.textContent = 'Close';
         closeDialogButton.style.cssText = `
@@ -895,19 +1262,19 @@
         closeDialogButton.addEventListener('mouseleave', () => {
             closeDialogButton.style.background = '#1a73e8';
         });
-        
+
         controls.appendChild(domainsButton);
         controls.appendChild(closeDialogButton);
-        
+
         // Assemble dialog
         dialog.appendChild(header);
         dialog.appendChild(countriesList);
         dialog.appendChild(controls);
         modal.appendChild(dialog);
-        
+
         // Add to page
         document.body.appendChild(modal);
-        
+
         // Close modal when clicking outside
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
@@ -937,17 +1304,17 @@
             z-index: 10000 !important;
             position: relative !important;
         `;
-        
+
         button.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
             showConfig();
         });
-        
+
         button.addEventListener('mouseenter', () => {
             button.style.background = '#1557b0 !important';
         });
-        
+
         button.addEventListener('mouseleave', () => {
             button.style.background = '#1a73e8 !important';
         });
@@ -1035,10 +1402,10 @@
             }
         `;
         document.head.appendChild(style);
-        
+
         // Create button
         setTimeout(createButton, 1000);
-        
+
         // Initial filter
         setTimeout(() => {
             filterResults();
@@ -1046,7 +1413,7 @@
             setTimeout(filterResults, 1000);
             setTimeout(filterResults, 3000);
         }, 1500);
-        
+
         // Watch for new results
         const observer = new MutationObserver((mutations) => {
             let hasNewResults = false;
@@ -1060,12 +1427,12 @@
                 setTimeout(filterResults, 300);
             }
         });
-        
+
         observer.observe(document.body, {
             childList: true,
             subtree: true
         });
-        
+
         // Filter on scroll
         window.addEventListener('scroll', () => {
             setTimeout(filterResults, 200);
@@ -1078,7 +1445,7 @@
     } else {
         init();
     }
-    
+
     // Make config function accessible
     window.geoBlockConfig = showConfig;
 })();
