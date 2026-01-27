@@ -1,82 +1,141 @@
 # GeoBlock Search Results
 
-> ⚠️ **Current Status**: This script is **currently optimized for DuckDuckGo** and may not work correctly with Google or other search engines due to differences in HTML structure.
+A powerful Greasemonkey/Tampermonkey userscript that filters search results by country of origin using multiple detection methods including TLD parsing, geolocation APIs, DNS nameserver analysis, and WHOIS lookups.
 
-A Greasemonkey/Tampermonkey userscript that allows you to block search results from specific countries based on their domain TLDs (top-level domains).
+## ✨ Key Features
 
-## ⚠️ Current Compatibility Status
+- 🌍 **55 Countries Supported** - Comprehensive coverage with flag emojis
+- 🔍 **Multi-Level TLD Detection** - Supports complex domains (e.g., .com.au, .co.uk, .gov.cn)
+- 🚀 **4-Tier Fallback System** - TLD → Geolocation API → DNS Nameserver → WHOIS
+- 💾 **Smart Caching** - 24h for geolocation, 7 days for WHOIS lookups
+- ⚡ **Rate Limiting** - Queue-based API requests to avoid throttling
+- 🎯 **60+ Known Domains** - Instant detection for popular sites (GitHub, StackOverflow, BBC, etc.)
+- 🌐 **Multi-Engine Support** - Works on Google, DuckDuckGo, Bing, Yahoo, Brave, and more
 
-| Search Engine | Status | Notes |
-|---------------|--------|-------|
-| **DuckDuckGo** | ✅ **Fully Working** | Primary development target |
-| **Google** | ⚠️ **Limited/Partial** | May not show flags or block correctly |
-| **Bing** | ❓ **Untested** | May require selector updates |
-| **Yahoo** | ❓ **Untested** | May require selector updates |
-| **Brave Search** | ❓ **Untested** | May require selector updates |
-| **Other engines** | ❓ **Untested** | Will likely need updates |
+## 🔧 Detection Methods
 
-**Note**: The script is actively developed with DuckDuckGo as the primary target. Other search engines may work but require specific selector updates for their HTML structure.
+The script uses a sophisticated 4-tier fallback system:
 
-## Features
+1. **TLD Parsing** (Local, Instant)
+   - Multi-level TLD support (.com.ar, .co.uk, .gov.cn, etc.)
+   - 60+ hardcoded popular domains for instant recognition
 
-- 🌍 **DuckDuckGo Optimized** - Fully tested and working on DuckDuckGo search
-- 🏴‍☠️ **Clickable Flag Interface** - Click any flag next to search results to toggle blocking for that country
-- ⚙️ **Interactive Configuration** - Modern modal dialog with clickable country flags and status indicators
-- 💾 **Persistent Settings** - Your preferences are saved in browser localStorage
+2. **Geolocation API** (ip-api.com)
+   - 45 requests/minute limit
+   - 24-hour cache for performance
+   - Queue-based rate limiting
+
+3. **DNS Nameserver Lookup** (Cloudflare DNS-over-HTTPS)
+   - Analyzes nameserver patterns (chinanet→China, yandex→Russia, etc.)
+   - Fast and reliable for major hosting providers
+
+4. **WHOIS Lookup** (whoisjsonapi.com)
+   - Fallback for domains without clear TLD/DNS indicators
+   - 7-day cache to minimize API usage
+   - 500 requests/day limit
+
+## 🌐 Supported Search Engines
+
+| Search Engine | Status |
+|---------------|--------|
+| **Google** | ✅ Fully Supported |
+| **DuckDuckGo** | ✅ Fully Supported |
+| **Bing** | ✅ Fully Supported |
+| **Yahoo** | ✅ Fully Supported |
+| **Brave Search** | ✅ Fully Supported |
+| **Ecosia** | ✅ Fully Supported |
+| **Startpage** | ✅ Fully Supported |
+| **Yandex** | ✅ Fully Supported |
+| **Qwant** | ✅ Fully Supported |
+
+## 🎨 User Interface Features
+
+- 🏴‍☠️ **Clickable Flag Interface** - Click any flag next to search results to toggle blocking
+- ⚙️ **Interactive Configuration** - Modern modal dialog with all countries and status indicators
+- 💾 **Persistent Settings** - Preferences saved in browser localStorage
 - 🎯 **Real-Time Filtering** - Automatically hides results from blocked countries as they load
 - 🎨 **Clean UI** - Compact blocked results with minimal space usage
 - ⚡ **Dynamic Updates** - Works with dynamically loaded search results (infinite scroll)
 - 🚫 **Visual Feedback** - Blocked results collapse to show only flag + "Blocked" indicator
+- 🔧 **Custom Domain Blocking** - Add any domain to your personal blocklist
 
-## Currently Supported Search Engines
+## 🗺️ Supported Countries (55)
 
-### ✅ **Primary Support**
-- **DuckDuckGo** - Full functionality, tested and working
+The script includes 55 countries with comprehensive multi-level TLD support:
 
-### ⚠️ **Limited/Partial Support**
-- **Google** - Basic detection may work, but flag placement and blocking may be unreliable
-- **Bing, Yahoo, Brave, Ecosia, Startpage, Yandex, Qwant** - Code exists but requires testing and selector updates
+<details>
+<summary><b>View Full Country List (Click to expand)</b></summary>
 
-## How to Test on Other Search Engines
+| Country | Primary TLD | Additional TLDs | Flag |
+|---------|-------------|-----------------|------|
+| Argentina | .ar | .com.ar, .org.ar, .net.ar, .gov.ar, .edu.ar, .mil.ar | 🇦🇷 |
+| Australia | .au | .com.au, .org.au, .net.au, .edu.au, .gov.au, .asn.au, .id.au | 🇦🇺 |
+| Austria | .at | .co.at, .or.at, .ac.at, .gv.at | 🇦🇹 |
+| Bangladesh | .bd | .com.bd, .org.bd, .net.bd, .gov.bd, .edu.bd, .ac.bd | 🇧🇩 |
+| Belgium | .be | .com.be, .org.be, .net.be, .ac.be, .gov.be | 🇧🇪 |
+| Brazil | .br | .com.br, .org.br, .net.br, .gov.br, .edu.br, .mil.br | 🇧🇷 |
+| Canada | .ca | .com.ca, .org.ca, .net.ca, .gc.ca | 🇨🇦 |
+| China | .cn | .com.cn, .org.cn, .net.cn, .gov.cn, .edu.cn, .ac.cn | 🇨🇳 |
+| Czech Republic | .cz | .co.cz | 🇨🇿 |
+| Denmark | .dk | .co.dk | 🇩🇰 |
+| Egypt | .eg | .com.eg, .org.eg, .net.eg, .gov.eg, .edu.eg | 🇪🇬 |
+| Finland | .fi | .com.fi, .org.fi, .net.fi, .gov.fi, .edu.fi | 🇫🇮 |
+| France | .fr | .com.fr, .org.fr, .net.fr, .gouv.fr, .asso.fr | 🇫🇷 |
+| Germany | .de | .com.de, .org.de, .net.de | 🇩🇪 |
+| Greece | .gr | .com.gr, .org.gr, .net.gr, .gov.gr, .edu.gr | 🇬🇷 |
+| Hong Kong | .hk | .com.hk, .org.hk, .net.hk, .gov.hk, .edu.hk | 🇭🇰 |
+| Hungary | .hu | .co.hu, .org.hu, .gov.hu, .edu.hu | 🇭🇺 |
+| India | .in | .co.in, .org.in, .net.in, .gov.in, .edu.in, .ac.in, .nic.in | 🇮🇳 |
+| Indonesia | .id | .co.id, .or.id, .net.id, .go.id, .ac.id, .web.id | 🇮🇩 |
+| Iran | .ir | .com.ir, .org.ir, .net.ir, .gov.ir, .ac.ir, .co.ir | 🇮🇷 |
+| Ireland | .ie | .com.ie, .org.ie, .net.ie, .gov.ie | 🇮🇪 |
+| Israel | .il | .co.il, .org.il, .net.il, .gov.il, .ac.il | 🇮🇱 |
+| Italy | .it | .com.it, .org.it, .net.it, .gov.it, .edu.it | 🇮🇹 |
+| Japan | .jp | .co.jp, .or.jp, .ne.jp, .go.jp, .ac.jp, .ed.jp, .lg.jp | 🇯🇵 |
+| Kenya | .ke | .co.ke, .or.ke, .ne.ke, .go.ke, .ac.ke | 🇰🇪 |
+| Malaysia | .my | .com.my, .org.my, .net.my, .gov.my, .edu.my | 🇲🇾 |
+| Mexico | .mx | .com.mx, .org.mx, .net.mx, .gob.mx, .edu.mx | 🇲🇽 |
+| Netherlands | .nl | .com.nl, .org.nl, .net.nl, .co.nl | 🇳🇱 |
+| New Zealand | .nz | .co.nz, .org.nz, .net.nz, .govt.nz, .ac.nz | 🇳🇿 |
+| Nigeria | .ng | .com.ng, .org.ng, .net.ng, .gov.ng, .edu.ng | 🇳🇬 |
+| North Korea | .kp | .com.kp, .org.kp, .net.kp, .gov.kp, .edu.kp | 🇰🇵 |
+| Norway | .no | .co.no, .org.no, .net.no, .gov.no | 🇳🇴 |
+| Pakistan | .pk | .com.pk, .org.pk, .net.pk, .gov.pk, .edu.pk | 🇵🇰 |
+| Philippines | .ph | .com.ph, .org.ph, .net.ph, .gov.ph, .edu.ph | 🇵🇭 |
+| Poland | .pl | .com.pl, .org.pl, .net.pl, .gov.pl, .edu.pl, .co.pl | 🇵🇱 |
+| Portugal | .pt | .com.pt, .org.pt, .net.pt, .gov.pt, .edu.pt | 🇵🇹 |
+| Romania | .ro | .com.ro, .org.ro, .net.ro, .gov.ro, .edu.ro | 🇷🇴 |
+| Russia | .ru | .com.ru, .org.ru, .net.ru, .gov.ru, .edu.ru, .mil.ru | 🇷🇺 |
+| Saudi Arabia | .sa | .com.sa, .org.sa, .net.sa, .gov.sa, .edu.sa | 🇸🇦 |
+| Singapore | .sg | .com.sg, .org.sg, .net.sg, .gov.sg, .edu.sg | 🇸🇬 |
+| South Africa | .za | .co.za, .org.za, .net.za, .gov.za, .ac.za | 🇿🇦 |
+| South Korea | .kr | .co.kr, .or.kr, .ne.kr, .go.kr, .ac.kr, .re.kr, .pe.kr | 🇰🇷 |
+| Spain | .es | .com.es, .org.es, .net.es, .gob.es, .edu.es | 🇪🇸 |
+| Sweden | .se | .com.se, .org.se, .net.se | 🇸🇪 |
+| Switzerland | .ch | .com.ch, .org.ch, .net.ch, .gov.ch | 🇨🇭 |
+| Taiwan | .tw | .com.tw, .org.tw, .net.tw, .gov.tw, .edu.tw | 🇹🇼 |
+| Thailand | .th | .co.th, .or.th, .net.th, .go.th, .ac.th | 🇹🇭 |
+| Turkey | .tr | .com.tr, .org.tr, .net.tr, .gov.tr, .edu.tr, .biz.tr | 🇹🇷 |
+| Ukraine | .ua | .com.ua, .org.ua, .net.ua, .gov.ua, .edu.ua | 🇺🇦 |
+| United Arab Emirates | .ae | .co.ae, .org.ae, .net.ae, .gov.ae, .ac.ae | 🇦🇪 |
+| United Kingdom | .uk | .co.uk, .ac.uk, .gov.uk, .org.uk, .net.uk, .sch.uk, .nhs.uk, .police.uk | 🇬🇧 |
+| United States | .us | .com.us, .org.us, .net.us, .edu, .gov, .mil | 🇺🇸 |
+| Vietnam | .vn | .com.vn, .org.vn, .net.vn, .gov.vn, .edu.vn, .ac.vn | 🇻🇳 |
 
-If you want to try the script on other search engines:
+</details>
 
-1. Install the script as directed below
-2. Visit the search engine and perform a search
-3. **Open browser console (F12)** to see debug messages
-4. Look for messages like:
-   - `"Found X results with selector: ..."`
-   - `"Display URL: ..."`
-   - `"Country found: ..."`
-5. If no flags appear, the selectors likely need updating for that search engine
+### 🌟 60+ Known Domains (Instant Detection)
 
-## Pre-configured Countries
-
-The script includes 21 countries by default with their TLDs:
-
-| Country | TLDs | Flag |
-|---------|------|------|
-| Argentina | .ar | 🇦🇷 |
-| Australia | .au | 🇦🇺 |
-| Brazil | .br | 🇧🇷 |
-| Canada | .ca | 🇨🇦 |
-| China | .cn | 🇨🇳 |
-| France | .fr | 🇫🇷 |
-| Germany | .de | 🇩🇪 |
-| India | .in | 🇮🇳 |
-| Iran | .ir | 🇮🇷 |
-| Italy | .it | 🇮🇹 |
-| Japan | .jp | 🇯🇵 |
-| Mexico | .mx | 🇲🇽 |
-| Netherlands | .nl | 🇳🇱 |
-| North Korea | .kp | 🇰🇵 |
-| Poland | .pl | 🇵🇱 |
-| Russia | .ru | 🇷🇺 |
-| South Korea | .kr | 🇰🇷 |
-| Spain | .es | 🇪🇸 |
-| Turkey | .tr | 🇹🇷 |
-| United Kingdom | .uk, .co.uk, .ac.uk, .gov.uk | 🇬🇧 |
-| United States | .us, .edu, .gov, .mil | 🇺🇸 |
+Popular domains are recognized instantly without API calls:
+- **Tech**: GitHub, StackOverflow, npm, PyPI, RubyGems, Crates.io
+- **Learning**: W3Schools, freeCodeCamp, Codecademy, Coursera, Khan Academy, Udemy
+- **News**: BBC, The Guardian
+- **Social**: YouTube, Facebook, Twitter, Reddit, LinkedIn, Instagram
+- **Chinese**: Baidu, QQ, Taobao, Tmall
+- **Russian**: Yandex, Mail.ru, VK
+- **Korean**: Naver, Daum
+- **Japanese**: Rakuten, Yahoo Japan
+- And many more...
 
 ## Installation
 
