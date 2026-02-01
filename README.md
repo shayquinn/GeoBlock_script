@@ -251,6 +251,36 @@ await geoBlockTestDomain('taobao.com')
 
 ### Common Issues
 
+**Console functions not defined (ReferenceError):**
+
+If you get `ReferenceError: geoBlockFailedLookups is not defined`, the issue is that the console functions are being defined inside the userscript's IIFE (Immediately Invoked Function Expression) with isolated scope. The script currently uses `@grant none` to run in the page context, which should make functions accessible.
+
+**Alternative solution if functions still aren't accessible:**
+
+The script can be modified to use `unsafeWindow` instead:
+
+1. Change the `@grant` directive at the top:
+```javascript
+// @grant        unsafeWindow
+```
+(Instead of `// @grant        none`)
+
+2. Replace all `window.` assignments for console functions with `unsafeWindow.`:
+```javascript
+// Make config function accessible
+unsafeWindow.geoBlockConfig = showConfig;
+
+// View all failed lookups
+unsafeWindow.geoBlockFailedLookups = function() { ... };
+
+// Export failed domains as CSV
+unsafeWindow.geoBlockExportFailed = function() { ... };
+
+// And so on for all console functions...
+```
+
+This explicitly grants the script access to the page's window object, making the functions callable from the browser console.
+
 **No flags appearing:**
 1. Check console for `✅ GeoBlock Search Results v4.6 loaded`
 2. Verify privacy notice was accepted (check localStorage: `geoblock_privacy_notice`)
