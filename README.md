@@ -2,6 +2,8 @@
 
 **Version 4.6** - A powerful, secure Greasemonkey/Tampermonkey userscript that filters search results by country of origin using multiple detection methods including TLD parsing, geolocation APIs, DNS nameserver analysis, and WHOIS lookups.
 
+![Demo](Screenshot 2026-01-27 161213.png)
+
 ## ✨ Key Features
 
 - 🌍 **55 Countries Supported** - Comprehensive coverage with flag emojis
